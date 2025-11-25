@@ -71,14 +71,15 @@ pm2 start npm --name "backend" -- run start
 ## 部署要点
 - 前端：`cd frontend && npm run build && npm start`。  
 - 后端：`cd backend && npm start`，保持端口与前端环境变量一致。  
-- 反向代理：参考 `tech-website.conf`，区分官网/后台与 API（示例 80/3080 -> 3000，3003 为 API）。  
+- 反向代理：参考 `tech-website.conf`，区分官网/后台与 API（示例 80/23080 -> 3000，3003 为 API）。  
 - 安全：使用环境变量提供 DB/JWT/SMTP，首发后修改默认管理员密码，开启 HTTPS、防火墙与上传大小限制。
 
 ## 使用nginx代理
 - 项目目录下有tech-website.conf文件，拷贝到nginx配置目录下，请替换域名部分，重启nginx；
 - 如果有ssl需求，可自行添加
-- 该配置文件主要是将80端口反代至前端[3000]普通页面访问(http://localhost:3000)，将23080端口反代至前端[3000]管理员页面访问(http://localhost:3000/admin/)
-- 用户访问：(http://localhost)。管理员访问：(http://localhost:23080/admin/login)
+- 该配置文件主要是将80端口反代至前端[3000]普通页面访问[http://localhost:3000]，将23080端口反代至前端[3000]管理员页面访问[http://localhost:3000/admin/]
+- 用户访问：(http://localhost)
+- 管理员访问：(http://localhost:23080/admin/login)
 
 ## 技术支持
 zhangzhibo@startpro.com.cn
