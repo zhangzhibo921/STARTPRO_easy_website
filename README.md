@@ -47,7 +47,7 @@ sudo apt install nginx -y
 
 ```bash
 # 拉取github仓库
-git clone https://github.com/zhangzhibo921/STARTPRO_easy_website.git
+git clone https://github.com/StartPro-information/STARTPRO_easy_website.git
 ```
 
 2) 下载zip包后，传到服务器解压
@@ -198,5 +198,6 @@ unzip STARTPRO_easy_website-main.zip
 企业官网： https://www.startpro.com.cn
 
 ![](公众号二维码-小.jpg)
+
 
 
