@@ -580,30 +580,6 @@ export default function AdminSettingsPage() {
                 <label className="block text-sm font-medium text-theme-text mb-1">品牌名称</label>
                 <ThemeAwareInput type="text" {...register('footer_layout.brand.name' as const)} className="px-3" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-1">公司名称</label>
-                <ThemeAwareInput type="text" {...register('company_name' as const)} className="px-3" placeholder="公司全称" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-1">品牌 Logo</label>
-                <div className="flex gap-2 items-center">
-                  <ThemeAwareInput type="text" readOnly {...register('site_logo' as const)} className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary" placeholder="请选择或上传品牌 Logo" />
-                  <button type="button" onClick={() => openAssetPicker({ type: 'siteLogo' }, watchedLogo)} className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm">
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    选择素材
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-theme-text mb-1">网站 Favicon</label>
-                <div className="flex gap-2 items-center">
-                  <ThemeAwareInput type="text" readOnly {...register('site_favicon' as const)} className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary" placeholder="请选择或上传 Favicon" />
-                  <button type="button" onClick={() => openAssetPicker({ type: 'siteFavicon' }, watchedFavicon)} className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm">
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    选择素材
-                  </button>
-                </div>
-              </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-theme-text mb-1">品牌描述</label>
                 <ThemeAwareInput type="text" {...register('footer_layout.brand.description' as const)} className="px-3" placeholder="一句话描述品牌定位" />
