@@ -7,6 +7,7 @@ export const ImageTextHorizontalPreview: React.FC<{ component: TemplateComponent
     description = '这是一段描述文字，用来展示图文组件的内容。',
     image = '',
     imagePosition = 'left',
+    imageWidthPercent = 100,
     widthOption = 'full',
     backgroundColorOption = 'default'
   } = component.props || {}
@@ -49,54 +50,71 @@ export const ImageTextHorizontalPreview: React.FC<{ component: TemplateComponent
   }`
   const textSpacingClass = isImageLeft ? 'md:pl-8' : 'md:pr-8'
 
+  const normalizedWidthPercent = Math.min(100, Math.max(40, Number(imageWidthPercent) || 100))
+  const imageWrapperStyle: React.CSSProperties = {
+    width: `${normalizedWidthPercent}%`,
+    maxWidth: '100%',
+    transition: 'width 200ms ease'
+  }
+
+  const imageStyle: React.CSSProperties = {
+    width: '100%',
+    height: 'auto',
+    maxWidth: '100%',
+    objectFit: 'contain'
+  }
+
   return (
     <div className={containerClass}>
       <div className={componentClass}>
         <div className={layoutClass}>
           <div className="w-full md:w-1/2 flex justify-center">
-            {image ? (
-              <>
-                {!imageLoaded && !imageError && (
-                  <div className="w-full flex items-center justify-center py-12 animate-pulse text-text-tertiary">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2 opacity-40">🖼️</div>
-                      <p>图片加载中...</p>
+            <div style={imageWrapperStyle} className="w-full transition-all duration-200">
+              {image ? (
+                <>
+                  {!imageLoaded && !imageError && (
+                    <div className="w-full flex items-center justify-center py-12 animate-pulse text-text-tertiary">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2 opacity-40">🖼️</div>
+                        <p>图片加载中...</p>
+                      </div>
                     </div>
-                  </div>
-                )}
-                <img
-                  src={image}
-                  alt={title}
-                  className={`w-full h-auto object-contain rounded-3xl shadow-lg ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  onLoad={() => {
-                    setImageLoaded(true)
-                    setImageError(false)
-                  }}
-                  onError={() => {
-                    setImageLoaded(false)
-                    setImageError(true)
-                  }}
-                />
-                {imageError && (
-                  <div className="w-full flex items-center justify-center py-12 text-text-tertiary">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2 opacity-40">⚠️</div>
-                      <p>图片加载失败，请检查链接</p>
+                  )}
+                  <img
+                    src={image}
+                    alt={title}
+                    style={imageStyle}
+                    className={`w-full h-auto object-contain rounded-3xl shadow-lg ${
+                      imageLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onLoad={() => {
+                      setImageLoaded(true)
+                      setImageError(false)
+                    }}
+                    onError={() => {
+                      setImageLoaded(false)
+                      setImageError(true)
+                    }}
+                  />
+                  {imageError && (
+                    <div className="w-full flex items-center justify-center py-12 text-text-tertiary">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2 opacity-40">⚠️</div>
+                        <p>图片加载失败，请检查链接</p>
+                      </div>
                     </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full flex items-center justify-center py-12 border border-dashed border-gray-300 rounded-3xl text-text-tertiary">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2 opacity-40">🖼️</div>
+                    <p>点击“编辑”上传图片</p>
+                    <p className="text-sm mt-2">支持 JPG / PNG / GIF</p>
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full flex items-center justify-center py-12 border border-dashed border-gray-300 rounded-3xl text-text-tertiary">
-                <div className="text-center">
-                  <div className="text-4xl mb-2 opacity-40">🖼️</div>
-                  <p>点击“编辑”上传图片</p>
-                  <p className="text-sm mt-2">支持 JPG / PNG / GIF</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className={`w-full md:w-1/2 text-left ${textSpacingClass}`}>

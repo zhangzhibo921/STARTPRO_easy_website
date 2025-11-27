@@ -11,6 +11,8 @@ import NewsListEditor from './NewsListEditor'
 import TestimonialsEditor from './TestimonialsEditor'
 import BannerCarouselEditor from './BannerCarouselEditor'
 import LinkBlockEditor from './LinkBlockEditor'
+import ImageTextEditor from './ImageTextEditor'
+import ImageTextHorizontalEditor from './ImageTextHorizontalEditor'
 
 type CustomEditorProps = {
   component: TemplateComponent
@@ -432,6 +434,34 @@ const renderLinkBlockEditor: CustomEditorRenderer = ({
   )
 }
 
+const renderImageTextEditor: CustomEditorRenderer = ({
+  component,
+  formData,
+  handleFieldChange
+}) => {
+  if (component.type !== 'image-text') return null
+  return (
+    <ImageTextEditor
+      imageWidthPercent={formData.imageWidthPercent}
+      onWidthChange={(value) => handleFieldChange('imageWidthPercent', value)}
+    />
+  )
+}
+
+const renderImageTextHorizontalEditor: CustomEditorRenderer = ({
+  component,
+  formData,
+  handleFieldChange
+}) => {
+  if (component.type !== 'image-text-horizontal') return null
+  return (
+    <ImageTextHorizontalEditor
+      imageWidthPercent={formData.imageWidthPercent}
+      onWidthChange={(value) => handleFieldChange('imageWidthPercent', value)}
+    />
+  )
+}
+
 const customEditors: Partial<Record<string, CustomEditorRenderer>> = {
   'video-player': renderVideoEditor,
   'banner-carousel': renderBannerCarouselEditor,
@@ -443,7 +473,9 @@ const customEditors: Partial<Record<string, CustomEditorRenderer>> = {
   'cyber-timeline': renderCyberTimelineEditorBlock,
   'news-list': renderNewsListEditor,
   'testimonials': renderTestimonialsEditor,
-  'link-block': renderLinkBlockEditor
+  'link-block': renderLinkBlockEditor,
+  'image-text': renderImageTextEditor,
+  'image-text-horizontal': renderImageTextHorizontalEditor
 }
 
 export const renderCustomEditor = (props: CustomEditorProps) => {

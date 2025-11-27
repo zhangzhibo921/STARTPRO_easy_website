@@ -203,6 +203,7 @@ export const imageComponents: ComponentDefinition[] = [
         title: '标题',
         description: '这是一段描述文字，用来展示图文组件的内容。',
         image: '',
+        imageWidthPercent: 100,
         layout: 'image-top',
         imagePosition: 'center',
         widthOption: 'full',
@@ -239,6 +240,7 @@ export const imageComponents: ComponentDefinition[] = [
         description: '这是一段描述文字，用来展示图文组件的内容。',
         image: '',
         imagePosition: 'left',
+        imageWidthPercent: 100,
         widthOption: 'full',
         backgroundColorOption: 'default'
       },
