@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../config/database')
 const { authenticateToken, requireEditor } = require('../middleware/auth')
+const crypto = require('crypto')
 
 // 获取仪表盘统计数据
 router.get('/dashboard', authenticateToken, requireEditor, async (req, res) => {
@@ -347,145 +348,137 @@ router.get('/analytics', authenticateToken, requireEditor, async (req, res) => {
       GROUP BY browser
     `)
 
-    // 获取关键指标
-    const [engagementMetrics] = await db.execute(`
-      WITH ordered_views AS (
-        SELECT
-          al.id,
-          al.resource_id,
-          ${visitorIdentifier} AS visitor_id,
-          al.created_at,
-          CASE
-            WHEN LAG(al.created_at) OVER (PARTITION BY ${visitorIdentifier} ORDER BY al.created_at) IS NULL THEN 1
-            WHEN TIMESTAMPDIFF(MINUTE, LAG(al.created_at) OVER (PARTITION BY ${visitorIdentifier} ORDER BY al.created_at), al.created_at) > 30 THEN 1
-            ELSE 0
-          END AS is_new_session
-        FROM activity_logs al
-        WHERE al.action = 'view' AND al.resource_type = 'page'
-        ${dateCondition}
-      ),
-      sessionized AS (
-        SELECT
-          *,
-          SUM(is_new_session) OVER (PARTITION BY visitor_id ORDER BY created_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS session_index
-        FROM ordered_views
-      ),
-      event_metrics AS (
-        SELECT
-          resource_id,
-          visitor_id,
-          CONCAT(visitor_id, '-', session_index) AS session_id,
-          COALESCE(
-            LEAST(
-              1800,
-              GREATEST(
-                1,
-                TIMESTAMPDIFF(
-                  SECOND,
-                  created_at,
-                  LEAD(created_at) OVER (PARTITION BY visitor_id, session_index ORDER BY created_at)
-                )
-              )
-            ),
-            30
-          ) AS duration_seconds
-        FROM sessionized
-      ),
-      session_lengths AS (
-        SELECT
-          CONCAT(visitor_id, '-', session_index) AS session_id,
-          COUNT(*) AS page_count
-        FROM sessionized
-        GROUP BY session_id
-      )
+    // 获取关键指标（兼容 MySQL 5.7，无窗口函数）
+    const [viewRows] = await db.execute(`
       SELECT
-        (SELECT COUNT(*) FROM session_lengths) as total_sessions,
-        COUNT(*) as total_page_views,
-        COUNT(DISTINCT visitor_id) as unique_visitors,
-        IFNULL(AVG(duration_seconds), 0) as avg_duration_seconds,
-        IFNULL(
-          (
-            SELECT
-              SUM(CASE WHEN page_count = 1 THEN 1 ELSE 0 END)
-            FROM session_lengths
-          ) / NULLIF((SELECT COUNT(*) FROM session_lengths), 0),
-          0
-        ) as bounce_ratio
-      FROM event_metrics
+        al.id,
+        al.resource_id,
+        al.user_id,
+        al.ip_address,
+        al.user_agent,
+        al.created_at
+      FROM activity_logs al
+      WHERE al.action = 'view' AND al.resource_type = 'page'
+      ${dateCondition}
+      ORDER BY al.created_at ASC
     `)
 
-    const [pageDetails] = await db.execute(`
-      WITH ordered_views AS (
-        SELECT
-          al.id,
-          al.resource_id,
-          ${visitorIdentifier} AS visitor_id,
-          al.created_at,
-          CASE
-            WHEN LAG(al.created_at) OVER (PARTITION BY ${visitorIdentifier} ORDER BY al.created_at) IS NULL THEN 1
-            WHEN TIMESTAMPDIFF(MINUTE, LAG(al.created_at) OVER (PARTITION BY ${visitorIdentifier} ORDER BY al.created_at), al.created_at) > 30 THEN 1
-            ELSE 0
-          END AS is_new_session
-        FROM activity_logs al
-        WHERE al.action = 'view' AND al.resource_type = 'page'
-        ${dateCondition}
-      ),
-      sessionized AS (
-        SELECT
-          *,
-          SUM(is_new_session) OVER (PARTITION BY visitor_id ORDER BY created_at ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS session_index
-        FROM ordered_views
-      ),
-      event_metrics AS (
-        SELECT
-          resource_id,
-          visitor_id,
-          CONCAT(visitor_id, '-', session_index) AS session_id,
-          COALESCE(
-            LEAST(
-              1800,
-              GREATEST(
-                1,
-                TIMESTAMPDIFF(
-                  SECOND,
-                  created_at,
-                  LEAD(created_at) OVER (PARTITION BY visitor_id, session_index ORDER BY created_at)
-                )
-              )
-            ),
-            30
-          ) AS duration_seconds
-        FROM sessionized
-      ),
-      session_lengths AS (
-        SELECT
-          CONCAT(visitor_id, '-', session_index) AS session_id,
-          COUNT(*) AS page_count
-        FROM sessionized
-        GROUP BY session_id
-      ),
-      aggregated AS (
-        SELECT
-          em.resource_id,
-          COUNT(*) AS views,
-          COUNT(DISTINCT em.visitor_id) AS unique_visitors,
-          IFNULL(AVG(em.duration_seconds), 0) AS avg_duration_seconds,
-          SUM(CASE WHEN sl.page_count = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0) AS bounce_ratio
-        FROM event_metrics em
-        LEFT JOIN session_lengths sl ON em.session_id = sl.session_id
-        GROUP BY em.resource_id
-      )
-      SELECT
-        p.title,
-        IFNULL(aggregated.views, 0) as views,
-        IFNULL(aggregated.unique_visitors, 0) as unique_visitors,
-        IFNULL(aggregated.avg_duration_seconds, 0) as avg_time,
-        ROUND(IFNULL(aggregated.bounce_ratio, 0) * 100) as bounce_rate
-      FROM pages p
-      LEFT JOIN aggregated ON aggregated.resource_id = p.id
-      ORDER BY COALESCE(aggregated.views, 0) DESC, p.updated_at DESC
-      LIMIT 20
+    const buildVisitorId = (row) => {
+      if (row.user_id) return String(row.user_id)
+      if (row.ip_address) return String(row.ip_address)
+      if (row.user_agent) return 'ua:' + crypto.createHash('md5').update(row.user_agent).digest('hex').slice(0, 12)
+      return 'unknown'
+    }
+
+    // 第一遍：标记 session，并统计每个 session 的页面数
+    const visitorState = new Map()
+    const sessionPageCounts = new Map()
+    const events = []
+
+    for (const row of viewRows) {
+      const visitorId = buildVisitorId(row)
+      const createdMs = new Date(row.created_at).getTime()
+      const state = visitorState.get(visitorId) || { lastTime: null, sessionIndex: 0 }
+
+      if (state.lastTime === null || createdMs - state.lastTime > 30 * 60 * 1000) {
+        state.sessionIndex += 1
+      }
+      state.lastTime = createdMs
+      visitorState.set(visitorId, state)
+
+      const sessionId = `${visitorId}-${state.sessionIndex}`
+      sessionPageCounts.set(sessionId, (sessionPageCounts.get(sessionId) || 0) + 1)
+
+      events.push({
+        resource_id: row.resource_id,
+        visitor_id: visitorId,
+        session_id: sessionId,
+        created_ms: createdMs
+      })
+    }
+
+    // 第二遍：按 session 计算停留时长
+    const sessionsMap = new Map()
+    for (const evt of events) {
+      const arr = sessionsMap.get(evt.session_id) || []
+      arr.push(evt)
+      sessionsMap.set(evt.session_id, arr)
+    }
+
+    const eventMetrics = []
+    for (const sessionEvents of sessionsMap.values()) {
+      sessionEvents.sort((a, b) => a.created_ms - b.created_ms)
+      for (let i = 0; i < sessionEvents.length; i++) {
+        const current = sessionEvents[i]
+        const next = sessionEvents[i + 1]
+        let duration = 30
+        if (next) {
+          const diffSec = Math.max(1, Math.round((next.created_ms - current.created_ms) / 1000))
+          duration = Math.min(1800, diffSec)
+        }
+        eventMetrics.push({ ...current, duration_seconds: duration })
+      }
+    }
+
+    // 汇总整体指标
+    const totalSessions = sessionPageCounts.size
+    const totalPageViews = eventMetrics.length
+    const uniqueVisitors = new Set(eventMetrics.map(e => e.visitor_id)).size
+    const avgDurationSeconds =
+      totalPageViews > 0
+        ? eventMetrics.reduce((sum, e) => sum + e.duration_seconds, 0) / totalPageViews
+        : 0
+    const singlePageSessions = Array.from(sessionPageCounts.values()).filter(count => count === 1).length
+    const bounceRatio = totalSessions > 0 ? singlePageSessions / totalSessions : 0
+
+    // 每个页面的指标
+    const pageAgg = new Map()
+    for (const evt of eventMetrics) {
+      const agg = pageAgg.get(evt.resource_id) || {
+        views: 0,
+        durationSum: 0,
+        uniqueVisitors: new Set(),
+        bounceHits: 0
+      }
+      agg.views += 1
+      agg.durationSum += evt.duration_seconds
+      agg.uniqueVisitors.add(evt.visitor_id)
+      if ((sessionPageCounts.get(evt.session_id) || 0) === 1) {
+        agg.bounceHits += 1
+      }
+      pageAgg.set(evt.resource_id, agg)
+    }
+
+    const [pages] = await db.execute(`
+      SELECT id, title, updated_at
+      FROM pages
     `)
+
+    const pageDetails = pages
+      .map(p => {
+        const agg = pageAgg.get(p.id) || {
+          views: 0,
+          durationSum: 0,
+          uniqueVisitors: new Set(),
+          bounceHits: 0
+        }
+        const count = agg.views || 0
+        const avgDuration = count > 0 ? agg.durationSum / count : 0
+        const bounceRatioPage = count > 0 ? agg.bounceHits / count : 0
+        return {
+          title: p.title,
+          views: count,
+          unique_visitors: agg.uniqueVisitors.size,
+          avg_time: avgDuration,
+          bounce_rate: Math.round(bounceRatioPage * 100),
+          updated_at: p.updated_at
+        }
+      })
+      .sort((a, b) => {
+        if (b.views !== a.views) return b.views - a.views
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      })
+      .slice(0, 20)
 
     // 格式化平均停留时间
     const formatAverageTime = (seconds) => {
@@ -495,12 +488,12 @@ router.get('/analytics', authenticateToken, requireEditor, async (req, res) => {
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
-    const engagementSummary = engagementMetrics[0] || {
-      total_sessions: 0,
-      total_page_views: 0,
-      unique_visitors: 0,
-      avg_duration_seconds: 0,
-      bounce_ratio: 0
+    const engagementSummary = {
+      total_sessions: totalSessions || 0,
+      total_page_views: totalPageViews || 0,
+      unique_visitors: uniqueVisitors || 0,
+      avg_duration_seconds: avgDurationSeconds || 0,
+      bounce_ratio: bounceRatio || 0
     }
 
     res.json({
