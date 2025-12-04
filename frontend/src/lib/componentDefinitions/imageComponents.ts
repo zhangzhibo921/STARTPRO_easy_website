@@ -14,12 +14,26 @@ export const imageComponents: ComponentDefinition[] = [
         backgroundImage: '/images/hero-bg.jpg',
         buttonText: '了解更多',
         buttonLink: '#',
+        titleColorMode: 'default',
+        customTitleColor: '',
+        subtitleColorMode: 'default',
+        customSubtitleColor: '',
         widthOption: 'full',
         backgroundColorOption: 'default'
       },
       editableFields: [
         { key: 'title', label: '主标题', type: 'text', value: '', required: true },
         { key: 'subtitle', label: '副标题', type: 'textarea', value: '' },
+        { key: 'titleColorMode', label: '标题颜色模式', type: 'text', value: 'default', options: [
+          { label: '默认', value: 'default' },
+          { label: '自定义', value: 'custom' }
+        ] },
+        { key: 'customTitleColor', label: '自定义标题颜色', type: 'text', value: '' },
+        { key: 'subtitleColorMode', label: '副标题颜色模式', type: 'text', value: 'default', options: [
+          { label: '默认', value: 'default' },
+          { label: '自定义', value: 'custom' }
+        ] },
+        { key: 'customSubtitleColor', label: '自定义副标题颜色', type: 'text', value: '' },
         { key: 'backgroundImage', label: '背景图片', type: 'image', value: '' },
         { key: 'buttonText', label: '按钮文字', type: 'text', value: '' },
         { key: 'buttonLink', label: '按钮链接', type: 'link', value: '' },
@@ -105,12 +119,26 @@ export const imageComponents: ComponentDefinition[] = [
             overlayPosition: 'bottom-left'
           }
         ],
+        titleColorMode: 'default',
+        customTitleColor: '',
+        subtitleColorMode: 'default',
+        customSubtitleColor: '',
         widthOption: 'full',
         backgroundColorOption: 'default'
       },
       editableFields: [
         { key: 'title', label: '标题', type: 'text', value: '' },
         { key: 'subtitle', label: '副标题', type: 'text', value: '' },
+        { key: 'titleColorMode', label: '标题颜色模式', type: 'text', value: 'default', options: [
+          { label: '默认', value: 'default' },
+          { label: '自定义', value: 'custom' }
+        ] },
+        { key: 'customTitleColor', label: '自定义标题颜色', type: 'text', value: '' },
+        { key: 'subtitleColorMode', label: '副标题颜色模式', type: 'text', value: 'default', options: [
+          { label: '默认', value: 'default' },
+          { label: '自定义', value: 'custom' }
+        ] },
+        { key: 'customSubtitleColor', label: '自定义副标题颜色', type: 'text', value: '' },
         { key: 'autoPlay', label: '自动播放', type: 'text', value: true },
         { key: 'interval', label: '轮播间隔(毫秒)', type: 'text', value: 5000 },
         { key: 'showIndicators', label: '显示指示器', type: 'text', value: true },

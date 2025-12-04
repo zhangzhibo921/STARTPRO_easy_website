@@ -45,7 +45,7 @@ export default function CreateVisualPage() {
   }
 
   const handleCancel = () => {
-    router.push('/admin/pages/create')
+    router.push('/admin/pages')
   }
 
   return (

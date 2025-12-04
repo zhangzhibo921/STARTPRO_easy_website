@@ -186,6 +186,12 @@ export interface Settings {
   copyright?: string
   analytics_code?: string
   site_theme?: string
+  allow_search_index?: boolean
+  verification_tags?: {
+    google?: string | null
+    bing?: string | null
+    baidu?: string | null
+  }
   social_links: {
     weibo?: string
     wechat?: string

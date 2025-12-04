@@ -1,9 +1,12 @@
-﻿import React, { ReactNode } from 'react'
+﻿import React, { ReactNode, useMemo } from 'react'
 import Head from 'next/head'
 import ThemeAwareHeader from './ThemeAwareHeader'
 import ThemeAwareFooter from './ThemeAwareFooter'
 import { motion } from 'framer-motion'
 import { useSettings } from '@/contexts/SettingsContext'
+
+import BackgroundRenderer from '@/components/theme-backgrounds/BackgroundRenderer'
+import { defaultTheme, getThemeById, resolveBackgroundEffect, type ThemeBackgroundChoice } from '@/styles/themes'
 
 import type { Settings } from '@/types';
 
@@ -37,6 +40,15 @@ export default function Layout({
   const { settings: contextSettings } = useSettings()
   const settings = settingsProp || contextSettings
 
+  const themeId = settings?.site_theme || defaultTheme.id
+  const activeTheme = useMemo(() => getThemeById(themeId), [themeId])
+  const backgroundPreference = (settings?.theme_background || 'theme-default') as ThemeBackgroundChoice
+  const resolvedBackground = useMemo(
+    () => resolveBackgroundEffect(activeTheme, backgroundPreference),
+    [activeTheme, backgroundPreference]
+  )
+  const isStarfield = resolvedBackground?.type === 'starfield'
+
   const siteName = settings?.site_name || '信息技术有限公司出品'
   const siteDescription = description || settings?.site_description || ''
   const resolvedKeywords =
@@ -45,8 +57,11 @@ export default function Layout({
       settings?.site_description ??
       '信息技术服务,官网,公司')
   const companyName = settings?.company_name || '信息技术有限公司出品'
-  const favicon = settings?.site_favicon || '/favicon.ico'
+  const favicon = settings?.site_favicon || ''
   const logo = settings?.site_logo || '/logo.png'
+  const allowSearchIndex = settings?.allow_search_index !== false
+  const shouldNoIndex = noindex || !allowSearchIndex
+  const verificationTags = settings?.verification_tags || {}
 
   const pageTitle = title ? `${title} - ${siteName}` : siteName
 
@@ -79,10 +94,15 @@ export default function Layout({
             <title key="meta:title">{pageTitle}</title>
             <meta key="meta:description" name="description" content={siteDescription} />
             <meta key="meta:keywords" name="keywords" content={resolvedKeywords} />
-            {noindex && <meta key="meta:robots" name="robots" content="noindex,nofollow" />}
+            {shouldNoIndex && <meta key="meta:robots" name="robots" content="noindex,nofollow" />}
 
-            <link rel="icon" href={favicon} />
-            <link rel="shortcut icon" href={favicon} />
+            {favicon && (
+              <>
+                <link rel="icon" href={favicon} id="favicon" />
+                <link rel="shortcut icon" href={favicon} />
+                <link rel="apple-touch-icon" href={favicon} id="apple-touch-icon" />
+              </>
+            )}
 
             <meta key="og:title" property="og:title" content={pageTitle} />
             <meta key="og:description" property="og:description" content={siteDescription} />
@@ -92,6 +112,16 @@ export default function Layout({
             <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
             <meta key="twitter:title" name="twitter:title" content={pageTitle} />
             <meta key="twitter:description" name="twitter:description" content={siteDescription} />
+
+            {verificationTags.google && (
+              <meta key="google-site-verification" name="google-site-verification" content={verificationTags.google as string} />
+            )}
+            {verificationTags.bing && (
+              <meta key="msvalidate.01" name="msvalidate.01" content={verificationTags.bing as string} />
+            )}
+            {verificationTags.baidu && (
+              <meta key="baidu-site-verification" name="baidu-site-verification" content={verificationTags.baidu as string} />
+            )}
           </>
         )}
 
@@ -100,20 +130,12 @@ export default function Layout({
         )}
       </Head>
 
-      <div className={`layout-container ${className}`}>
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="layout-background"></div>
-          <div className="grid-pattern"></div>
-          <div className="decorative-elements">
-            <div className="decorative-dot dot-1"></div>
-            <div className="decorative-dot dot-2"></div>
-            <div className="decorative-dot dot-3"></div>
-            <div className="decorative-dot dot-4"></div>
-            <div className="decorative-dot dot-5"></div>
-          </div>
-        </div>
+      <div
+        className={`layout-container relative min-h-screen overflow-hidden text-theme-text ${!isStarfield ? 'bg-semantic-mutedBg' : ''} ${className}`}
+      >
+        <BackgroundRenderer effect={resolvedBackground} />
 
-        <div className="relative z-10">
+        <div className="relative z-10 min-h-screen">
           <ThemeAwareHeader {...finalHeaderProps} />
 
           <motion.main
@@ -121,6 +143,7 @@ export default function Layout({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="pt-20 main-content content-container"
+            style={{ background: 'transparent' }}
           >
             {children}
           </motion.main>

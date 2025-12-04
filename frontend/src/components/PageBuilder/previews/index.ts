@@ -22,6 +22,7 @@ import { ImageTextPreview } from './ImageTextPreview'
 import { ImageTextHorizontalPreview } from './ImageTextHorizontalPreview'
 import { LogoScrollPreview } from './LogoScrollPreview'
 import { LinkBlockPreview } from './LinkBlockPreview'
+import { TablePreview } from './TablePreview'
 import { FeatureGridLargePreview } from './FeatureGridLargePreview'
 import { VideoPlayerPreview } from './VideoPlayerPreview'
 import { RawHtmlPreview } from './RawHtmlPreview'
@@ -51,6 +52,7 @@ export {
   ImageTextHorizontalPreview,
   LogoScrollPreview,
   LinkBlockPreview,
+  TablePreview,
   FeatureGridLargePreview,
   VideoPlayerPreview,
   RawHtmlPreview
@@ -82,6 +84,7 @@ export const componentPreviews = {
   'image-text': ImageTextPreview,
   'banner-carousel': BannerCarouselPreview,
   'link-block': LinkBlockPreview,
+  'table': TablePreview,
   'video-player': VideoPlayerPreview,
   'raw-html': RawHtmlPreview,
   'premium-hero': HeroPreview,

@@ -362,7 +362,7 @@ export default function ThemeAwareFooter({
                       <li key={link.id || `${section.id}-${link.label}`}>
                         <Link
                           href={link.url}
-                          className="flex items-center text-xs transition-colors duration-300"
+                          className="flex items-center text-xs transition-colors duration-300 footer-nav-link"
                           style={{ color: footerStyles.linkColor }}
                           target={link.target || '_self'}
                           rel={link.target === '_blank' ? 'noopener noreferrer' : undefined}

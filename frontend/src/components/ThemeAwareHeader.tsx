@@ -253,7 +253,7 @@ export default function ThemeAwareHeader({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       style={headerStyleObject}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 nav-container ${scrolled ? 'py-1' : 'py-2'}`}
+      className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-300 nav-container ${scrolled ? 'py-1' : 'py-2'}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between" style={{ height: '70px' }}>
@@ -309,7 +309,7 @@ export default function ThemeAwareHeader({
                           e.currentTarget.style.backgroundColor = 'transparent'
                         }}
                       >
-                        <span className="relative z-10">{item.label}</span>
+                        <span className="relative z-20">{item.label}</span>
                       </Link>
                     </div>
 
@@ -321,7 +321,7 @@ export default function ThemeAwareHeader({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 5 }}
                           transition={{ duration: 0.2, ease: "easeOut" }}
-                          className="absolute top-full left-0 mt-2 w-48 rounded-lg backdrop-blur-sm overflow-hidden border"
+          className="absolute top-full left-0 mt-2 w-48 rounded-lg backdrop-blur-sm overflow-hidden border z-[1200]"
                           style={{
                             backgroundColor: headerStyles.dropdownBgColor,
                             borderColor: `rgba(${hexToRgb(headerStyles.textColor).join(', ')}, 0.1)`,
@@ -377,7 +377,7 @@ export default function ThemeAwareHeader({
                     }}
                     {...(item.external && { target: '_blank', rel: 'noopener noreferrer' })}
                   >
-                    <span className="relative z-10">{item.label}</span>
+                    <span className="relative z-20">{item.label}</span>
                   </Link>
                 )}
               </div>

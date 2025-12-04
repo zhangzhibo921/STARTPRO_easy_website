@@ -20,7 +20,7 @@ export const RawHtmlPreview: React.FC<{ component: TemplateComponent }> = ({ com
   const content = scopedHtml && scopedHtml.trim() ? scopedHtml : placeholder
 
   return (
-    <div className="border border-dashed border-theme-divider rounded-lg p-4 bg-theme-surfaceAlt min-h-[140px]">
+    <div className="p-4 min-h-[140px]">
       <div
         className={`prose dark:prose-invert max-w-none text-theme-textPrimary ${baseClass} ${uniqueClass}`}
         dangerouslySetInnerHTML={{ __html: content }}

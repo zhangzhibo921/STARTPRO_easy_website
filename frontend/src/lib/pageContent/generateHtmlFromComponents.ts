@@ -1,5 +1,5 @@
 import { RenderMap } from '@/types/pageContent'
-import { renderHero, renderTextBlock, renderImageBlock, renderImageText, renderImageTextHorizontal, renderContentSection, renderBannerCarousel } from './renderers/basic'
+import { renderHero, renderTextBlock, renderImageBlock, renderImageText, renderImageTextHorizontal, renderContentSection, renderBannerCarousel, renderTable } from './renderers/basic'
 import { renderFeatureGrid, renderFeatureGridLarge, renderServiceGrid, renderLogoWall, renderLogoScroll, renderLinkBlock } from './renderers/collections'
 import { renderPricingCards } from './renderers/pricing'
 import { renderTeamGrid, renderTestimonials } from './renderers/team'
@@ -27,6 +27,7 @@ const renderers: RenderMap = {
   'image-text-horizontal': renderImageTextHorizontal,
   'content-section': renderContentSection,
   'banner-carousel': renderBannerCarousel,
+  'table': renderTable,
   'feature-grid': renderFeatureGrid,
   'feature-grid-large': renderFeatureGridLarge,
   'pricing-cards': renderPricingCards,

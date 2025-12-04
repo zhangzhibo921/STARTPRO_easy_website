@@ -2,22 +2,23 @@ import React from 'react'
 import { TemplateComponent } from '@/types/templates'
 
 export const TextBlockPreview: React.FC<{ component: TemplateComponent }> = ({ component }) => {
-  const { title, content, widthOption = 'full', backgroundColorOption = 'default' } = component.props
+  const { title, content, widthOption = 'full', backgroundColorOption = 'default', alignment = 'left' } = component.props
 
   // 根据宽度选项设置容器类名
   const containerClass = widthOption === 'standard' ? 'max-w-screen-2xl mx-auto' : 'w-full';
   // 根据背景色选项设置组件内部背景色
   const componentClass = backgroundColorOption === 'transparent' ? 'text-block-preview p-8 rounded-lg' : 'text-block-preview bg-color-surface p-8 rounded-lg shadow-sm';
+  const alignClass = alignment === 'center' ? 'text-center' : alignment === 'right' ? 'text-right' : 'text-left'
 
   return (
     <div className={containerClass}>
       <div className={componentClass}>
         {title && (
-          <h2 className="text-block-title text-3xl font-bold mb-6 text-text-primary leading-tight">
+          <h2 className={`text-block-title text-3xl font-bold mb-6 text-text-primary leading-tight ${alignClass}`}>
             {title}
           </h2>
         )}
-        <div className="text-block-content prose prose-lg max-w-none">
+        <div className={`text-block-content prose prose-lg max-w-none ${alignClass}`}>
           {content ? (
             <div
               className="text-text-secondary leading-relaxed"

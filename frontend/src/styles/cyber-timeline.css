@@ -139,10 +139,12 @@
   width: var(--cyber-card-width);
   padding: 1.5rem;
   border-radius: 1.5rem;
-  background: linear-gradient(135deg,
-    rgba(var(--color-surface, 15,23,42), 0.95),
-    rgba(var(--color-surface, 15,23,42), 0.7));
-  border: 1px solid rgba(var(--color-primary-rgb, 59,130,246), 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-surface-rgb, 15, 23, 42), 0.95),
+    rgba(var(--color-surface-rgb, 15, 23, 42), 0.7)
+  );
+  border: 1px solid rgba(var(--color-primary-rgb, 59, 130, 246), 0.25);
   box-shadow: 0 20px 40px rgba(0,0,0,0.35);
   backdrop-filter: blur(12px);
   order: 1;

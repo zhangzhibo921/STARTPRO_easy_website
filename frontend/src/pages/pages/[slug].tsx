@@ -166,20 +166,19 @@ export default function DynamicPage({ initialPage, initialError, initialSettings
     )
   }
 
+  const pageTitle = page.meta_title || page.title
+  const pageDescription = page.meta_description || page.excerpt || settings?.site_description || ''
+
   return (
     <Layout settings={initialSettings}>
       <Head>
-        <title key="meta:title">{page.meta_title || page.title}</title>
-        <meta
-          key="meta:description"
-          name="description"
-          content={page.meta_description || page.excerpt || ''}
-        />
-        <meta key="og:title" property="og:title" content={page.meta_title || page.title} />
+        <title key="meta:title">{pageTitle}</title>
+        <meta key="meta:description" name="description" content={pageDescription} />
+        <meta key="og:title" property="og:title" content={pageTitle} />
         <meta
           key="og:description"
           property="og:description"
-          content={page.meta_description || page.excerpt || ''}
+          content={pageDescription}
         />
         {page.featured_image && (
           <meta key="og:image" property="og:image" content={page.featured_image} />

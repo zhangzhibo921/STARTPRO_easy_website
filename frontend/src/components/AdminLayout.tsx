@@ -18,13 +18,16 @@ import {
   User,
   ChevronDown,
   Bell,
-  Inbox
+  Inbox,
+  Key
 } from 'lucide-react'
 import { authApi } from '@/utils/api'
 import { getThemeById, defaultTheme, resolveBackgroundEffect, type ThemeBackgroundChoice } from '@/styles/themes'
 import BackgroundRenderer from '@/components/theme-backgrounds/BackgroundRenderer'
 import { useSettings } from '@/contexts/SettingsContext'
 import type { User as UserType } from '@/types'
+import UserProfileModal from '@/components/UserProfileModal'
+import ChangePasswordModal from '@/components/ChangePasswordModal'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -91,11 +94,22 @@ export default function AdminLayout({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [user, setUser] = useState<UserType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
   const router = useRouter()
 
   const pageTitle = title === '后台管理' ? title : `${title} - 后台管理`
 
   // 检查认证状态
+  const refreshUserProfile = async (): Promise<void> => {
+    const response = await authApi.getProfile()
+    if (response.success) {
+      setUser(response.data)
+      return
+    }
+    throw new Error('获取用户信息失败')
+  }
+
   useEffect(() => {
     const checkAuth = async () => {
       const token = Cookies.get('auth-token')
@@ -106,13 +120,7 @@ export default function AdminLayout({
       }
 
       try {
-        const response = await authApi.getProfile()
-        
-        if (response.success) {
-          setUser(response.data)
-        } else {
-          throw new Error('获取用户信息失败')
-        }
+        await refreshUserProfile()
       } catch (error: any) {
         console.error('AdminLayout: 认证失败:', error)
         Cookies.remove('auth-token')
@@ -139,6 +147,16 @@ export default function AdminLayout({
       router.replace('/admin/login')
       toast.success('已安全退出登录')
     }
+  }
+
+  const handleOpenProfile = () => {
+    setIsUserMenuOpen(false)
+    setShowProfileModal(true)
+  }
+
+  const handleOpenPassword = () => {
+    setIsUserMenuOpen(false)
+    setShowPasswordModal(true)
   }
 
   // 检查菜单是否激活
@@ -178,16 +196,16 @@ export default function AdminLayout({
 
       <div className="relative min-h-screen overflow-hidden">
         <BackgroundRenderer effect={resolvedBackground} />
-        <div className="admin-shell relative z-10 min-h-screen bg-semantic-mutedBg text-theme-text transition-colors">
+        <div className="admin-shell relative z-990 min-h-screen bg-semantic-mutedBg text-theme-text transition-colors">
         {/* 侧边栏*/}
         <div className="fixed inset-y-0 left-0 z-50 w-64 bg-semantic-panel transform transition-transform duration-300 lg:translate-x-0">
           {/* Logo区域 */}
           <div className="flex items-center justify-between h-16 px-6">
             <Link href="/admin/dashboard" className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-theme-primary to-theme-accent text-white shadow-md">
-                <span className="font-bold text-sm">T</span>
+                <img src="/system-default/元兴logo.png" alt="Logo"  className="h-4 w-4"/>
               </div>
-              <span className="text-lg font-semibold text-theme-text">管理系统</span>
+              <span className="text-lg font-semibold text-theme-text">管理员后台</span>
             </Link>
             
             <button
@@ -234,7 +252,7 @@ export default function AdminLayout({
         {/* 涓诲唴瀹瑰尯鍩?*/}
         <div className="lg:pl-64">
           {/* 顶部导航栏*/}
-          <header className="bg-semantic-panel h-16 shadow-sm">
+          <header className="bg-semantic-panel h-16 shadow-sm relative z-999">
             <div className="flex items-center justify-between h-full px-6">
               {/* 移动端菜单按钮*/}
               <button
@@ -252,7 +270,7 @@ export default function AdminLayout({
               </div>
 
               {/* 用户菜单 */}
-              <div className="relative">
+              <div className="relative z-[1200]">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-3 p-2 rounded-lg text-theme-textSecondary hover:text-theme-text transition-colors"
@@ -272,7 +290,7 @@ export default function AdminLayout({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 bg-semantic-panel rounded-lg shadow-lg"
+                      className="absolute right-0 mt-2 w-48 bg-semantic-panel rounded-lg shadow-lg z-[1200] border border-semantic-panelBorder backdrop-blur-sm"
                     >
                       <div className="py-2">
                         <div className="px-4 py-2">
@@ -283,6 +301,21 @@ export default function AdminLayout({
                             {user?.email}
                           </p>
                         </div>
+
+                        <button
+                          onClick={handleOpenProfile}
+                          className="w-full text-left px-4 py-2 text-sm text-theme-text hover:bg-[rgba(var(--color-text-muted-rgb),0.1)] flex items-center space-x-2 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          <span>账户资料</span>
+                        </button>
+                        <button
+                          onClick={handleOpenPassword}
+                          className="w-full text-left px-4 py-2 text-sm text-theme-text hover:bg-[rgba(var(--color-text-muted-rgb),0.1)] flex items-center space-x-2 transition-colors"
+                        >
+                          <Key className="w-4 h-4" />
+                          <span>修改密码</span>
+                        </button>
 
                         <button
                           onClick={handleLogout}
@@ -320,6 +353,17 @@ export default function AdminLayout({
         )}
         </div>
       </div>
+      <UserProfileModal
+        isOpen={showProfileModal}
+        user={user}
+        onClose={() => setShowProfileModal(false)}
+        onProfileUpdated={refreshUserProfile}
+      />
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onPasswordChanged={refreshUserProfile}
+      />
     </>
   )
 }

@@ -53,7 +53,7 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, customName, customUr
         <p className="text-sm font-medium text-theme-textPrimary">站点字体</p>
         <p className="text-xs text-theme-textSecondary">选择内置免费字体，应用于全站文字显示。</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {FONT_OPTIONS.filter(opt => !opt.isCustom).map(option => (
           <FontOptionCard
             key={option.id}
@@ -71,32 +71,36 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, customName, customUr
           </div>
           <button
             type="button"
-            className={`text-xs px-3 py-1 rounded-md border ${current === 'custom' ? 'border-tech-accent text-tech-accent' : 'border-theme-divider text-theme-textSecondary'}`}
+            className={`text-xs px-3 py-1 rounded-md border ${
+              current === 'custom' ? 'border-tech-accent text-tech-accent' : 'border-theme-divider text-theme-textSecondary'
+            }`}
             onClick={() => onChange('custom')}
           >
             {current === 'custom' ? '已选择' : '选择'}
           </button>
         </div>
         <div className="space-y-2">
-          <div>
-            <label className="block text-xs font-medium text-theme-textPrimary mb-1">font-family 名称</label>
-            <input
-              type="text"
-              value={customName || ''}
-              onChange={(e) => handleCustomChange('name', e.target.value)}
-              className="w-full px-3 py-2 theme-input border border-theme-divider bg-theme-surfaceAlt focus:ring-2 focus:ring-tech-accent focus:border-transparent"
-              placeholder="例如：'MyFont', 'Open Sans', sans-serif"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-theme-textPrimary mb-1">样式表 URL（支持 https）</label>
-            <input
-              type="url"
-              value={customUrl || ''}
-              onChange={(e) => handleCustomChange('url', e.target.value)}
-              className="w-full px-3 py-2 theme-input border border-theme-divider bg-theme-surfaceAlt focus:ring-2 focus:ring-tech-accent focus:border-transparent"
-              placeholder="https://.../font.css"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-theme-textPrimary mb-1">font-family 名称</label>
+              <input
+                type="text"
+                value={customName || ''}
+                onChange={e => handleCustomChange('name', e.target.value)}
+                className="w-full px-3 py-2 theme-input border border-theme-divider bg-theme-surfaceAlt focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                placeholder="例如：'MyFont', 'Open Sans', sans-serif"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-theme-textPrimary mb-1">样式表 URL（支持 https）</label>
+              <input
+                type="url"
+                value={customUrl || ''}
+                onChange={e => handleCustomChange('url', e.target.value)}
+                className="w-full px-3 py-2 theme-input border border-theme-divider bg-theme-surfaceAlt focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                placeholder="https://.../font.css"
+              />
+            </div>
           </div>
           <p className="text-xs text-theme-textSecondary">
             建议使用可信 CDN（如 Google Fonts、字蛛等），确保有权使用该字体。

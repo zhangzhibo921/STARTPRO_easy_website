@@ -160,7 +160,22 @@ const ComponentEditor = ({
     toast.success(`已新增 ${newLogos.length} 个 Logo`)
   }
 
-  const commonFields = ['src', 'alt', 'backgroundImage', 'backgroundColor', 'shape', 'image', 'imagePosition', 'linkUrl', 'linkTarget']
+  const commonFields = [
+    'src',
+    'alt',
+    'backgroundImage',
+    'backgroundColor',
+    'shape',
+    'image',
+    'imagePosition',
+    'linkUrl',
+    'linkTarget',
+    'alignment',
+    'titleColorMode',
+    'customTitleColor',
+    'subtitleColorMode',
+    'customSubtitleColor'
+  ]
   const fieldSkipMap: Record<string, Set<string>> = {
     'cyber-showcase': new Set(['title', 'description'])
   }
@@ -195,8 +210,33 @@ const ComponentEditor = ({
               {key === 'widthOption' && '宽度设置'}
               {key === 'backgroundColorOption' && '背景模式'}
               {key === 'imagePosition' && '图片位置'}
+              {key === 'alignment' && '对齐方式'}
+              {key === 'titleColorMode' && '标题颜色模式'}
+              {key === 'customTitleColor' && '自定义标题颜色'}
+              {key === 'subtitleColorMode' && '副标题颜色模式'}
+              {key === 'customSubtitleColor' && '自定义副标题颜色'}
             </label>
-            {key === 'backgroundColor' ? (
+            {(key === 'customTitleColor' || key === 'customSubtitleColor') ? (
+              <div className="flex items-center space-x-3">
+                <input
+                  type="color"
+                  value={
+                    typeof formData[key] === 'string' && formData[key].trim()
+                      ? formData[key]
+                      : '#ffffff'
+                  }
+                  onChange={(e) => handleFieldChange(key, e.target.value)}
+                  className="h-10 w-16 rounded border border-gray-300 dark:border-gray-600 bg-transparent cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={formData[key] || ''}
+                  onChange={(e) => handleFieldChange(key, e.target.value)}
+                  placeholder="如 #2563eb 或 rgba(...)"
+                  className="flex-1 px-3 py-2 rounded-lg theme-input focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                />
+              </div>
+            ) : key === 'backgroundColor' ? (
               <div className="flex items-center space-x-3">
                 <input
                   type="color"

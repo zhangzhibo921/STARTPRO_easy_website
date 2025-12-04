@@ -16,7 +16,6 @@ const BackgroundRenderer: React.FC<BackgroundRendererProps> = ({ effect }) => {
       {effect.type === 'starfield' && <StarfieldBackground config={effect} />}
       {effect.type === 'gradient' && <GradientBackground config={effect} />}
       {effect.type === 'pattern' && <PatternBackground config={effect} />}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30 opacity-50" />
     </div>
   )
 }

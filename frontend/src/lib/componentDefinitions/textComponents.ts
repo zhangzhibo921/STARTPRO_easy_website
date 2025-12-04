@@ -1,5 +1,5 @@
 import { ComponentDefinition } from '@/types/templates'
-import { CallToActionPreview, ContactFormPreview, FaqSectionPreview, LinkBlockPreview, TextBlockPreview } from '@/components/PageBuilder/previews'
+import { CallToActionPreview, ContactFormPreview, FaqSectionPreview, LinkBlockPreview, TextBlockPreview, TablePreview } from '@/components/PageBuilder/previews'
 
 export const textComponents: ComponentDefinition[] = [
   {
@@ -18,6 +18,11 @@ export const textComponents: ComponentDefinition[] = [
       editableFields: [
         { key: 'title', label: '标题', type: 'text', value: '' },
         { key: 'content', label: '内容', type: 'rich-text', value: '' },
+        { key: 'alignment', label: '对齐方式', type: 'text', value: 'left', options: [
+          { label: '左对齐', value: 'left' },
+          { label: '居中对齐', value: 'center' },
+          { label: '右对齐', value: 'right' }
+        ] },
         { key: 'widthOption', label: '宽度选项', type: 'text', value: 'full', options: [
           { label: '全宽', value: 'full' },
           { label: '标准宽度', value: 'standard' }
@@ -151,6 +156,10 @@ export const textComponents: ComponentDefinition[] = [
           { text: '产品文档', url: 'https://docs.example.com' },
           { text: '技术支持', url: 'https://support.example.com' }
         ],
+        linkStyle: 'gradient',
+        linkShape: 'pill',
+        linkGlow: true,
+        hoverEffect: 'lift',
         widthOption: 'full',
         backgroundColorOption: 'default'
       },
@@ -167,8 +176,62 @@ export const textComponents: ComponentDefinition[] = [
         { key: 'widthOption', label: '宽度选项', type: 'text', value: 'full', options: [
           { label: '全宽', value: 'full' },
           { label: '标准宽度', value: 'standard' }
+        ] },
+        { key: 'linkStyle', label: '按钮样式', type: 'text', value: 'gradient', options: [
+          { label: '渐变', value: 'gradient' },
+          { label: '填充', value: 'solid' },
+          { label: '描边', value: 'outline' }
+        ] },
+        { key: 'linkShape', label: '按钮圆角', type: 'text', value: 'pill', options: [
+          { label: '胶囊', value: 'pill' },
+          { label: '圆角', value: 'rounded' },
+          { label: '直角', value: 'square' }
+        ] },
+        { key: 'hoverEffect', label: '悬浮特效', type: 'text', value: 'lift', options: [
+          { label: '浮起', value: 'lift' },
+          { label: '发光', value: 'glow' },
+          { label: '关闭', value: 'none' }
+        ] },
+        { key: 'linkGlow', label: '流光/光晕', type: 'text', value: true, options: [
+          { label: '开启', value: 'true' },
+          { label: '关闭', value: 'false' }
         ] }
       ],
       previewComponent: LinkBlockPreview
+    },
+
+  {
+      type: 'table',
+      name: '表格',
+      description: '自定义列与行的数据表，支持对齐与样式调整。',
+      icon: '📊',
+      category: '文本组件',
+      defaultProps: {
+        title: '数据表',
+        columns: [
+          { key: 'item', label: '名称', align: 'left' },
+          { key: 'value', label: '数值', align: 'center' },
+          { key: 'status', label: '状态', align: 'right' }
+        ],
+        rows: [
+          { item: '指标 A', value: '123', status: '正常' },
+          { item: '指标 B', value: '87', status: '告警' },
+          { item: '指标 C', value: '45', status: '离线' }
+        ],
+        widthOption: 'full',
+        backgroundColorOption: 'default'
+      },
+      editableFields: [
+        { key: 'title', label: '标题', type: 'text', value: '' },
+        { key: 'widthOption', label: '宽度选项', type: 'text', value: 'full', options: [
+          { label: '全宽', value: 'full' },
+          { label: '标准宽度', value: 'standard' }
+        ] },
+        { key: 'backgroundColorOption', label: '背景色选项', type: 'text', value: 'default', options: [
+          { label: '默认背景色', value: 'default' },
+          { label: '透明背景色', value: 'transparent' }
+        ] }
+      ],
+      previewComponent: TablePreview
     }
 ]

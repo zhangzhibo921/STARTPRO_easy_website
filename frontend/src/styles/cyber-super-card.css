@@ -8,7 +8,7 @@
 }
 
 .cyber-super-card-shell--default {
-  background: color-mix(in srgb, var(--color-surface, #070c18) 95%, var(--color-primary, #2563eb) 5%);
+  background: var(--color-surface, #0f172a);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
 }
 
@@ -22,8 +22,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top left, rgba(var(--color-primary-rgb, 59, 130, 246), 0.22), transparent 55%);
-  opacity: 0.25;
+  background: radial-gradient(
+    circle at 18% 12%,
+    color-mix(in srgb, rgba(var(--color-surface-rgb, 15, 23, 42), 0.24) 75%, rgba(var(--color-accent-rgb, 14, 165, 233), 0.24) 25%),
+    transparent 55%
+  );
+  opacity: 0.12;
   pointer-events: none;
 }
 
@@ -40,7 +44,8 @@
   );
   filter: blur(70px);
   animation: cyber-super-flow 3.5s linear infinite;
-  opacity: 0.85;
+  opacity: 0.35;
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
@@ -284,4 +289,3 @@
     margin: -1.5rem -1.5rem 1rem;
   }
 }
-

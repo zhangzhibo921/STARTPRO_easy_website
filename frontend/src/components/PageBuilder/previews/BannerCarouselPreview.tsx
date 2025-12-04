@@ -36,7 +36,11 @@ export const BannerCarouselPreview: React.FC<{ component: TemplateComponent }> =
     showIndicators = true,
     showArrows = true,
     widthOption = 'full',
-    backgroundColorOption = 'default'
+    backgroundColorOption = 'default',
+    titleColorMode = 'default',
+    customTitleColor = '',
+    subtitleColorMode = 'default',
+    customSubtitleColor = ''
   } = component.props
 
   const containerClass = `${widthOption === 'standard' ? 'max-w-screen-2xl mx-auto' : 'w-full'} ${
@@ -105,12 +109,18 @@ export const BannerCarouselPreview: React.FC<{ component: TemplateComponent }> =
           <div className={`absolute ${overlayPosClass} z-10 banner-slide-content-container px-4 md:px-6`}>
             <div className="max-w-3xl bg-color-surface/70 backdrop-blur-sm rounded-xl p-6 md:p-8 banner-slide-content">
               {currentSlide.title && (
-                <h2 className="text-3xl font-bold text-text-primary mb-4 leading-tight banner-slide-title dark:text-white">
+                <h2
+                  className="text-3xl font-bold text-text-primary mb-4 leading-tight banner-slide-title dark:text-white"
+                  style={titleColorMode === 'custom' && customTitleColor ? { color: customTitleColor } : undefined}
+                >
                   {currentSlide.title}
                 </h2>
               )}
               {currentSlide.description && (
-                <p className="text-lg text-text-secondary mb-6 opacity-90 banner-slide-description dark:text-white">
+                <p
+                  className="text-lg text-text-secondary mb-6 opacity-90 banner-slide-description dark:text-white"
+                  style={subtitleColorMode === 'custom' && customSubtitleColor ? { color: customSubtitleColor } : undefined}
+                >
                   {currentSlide.description}
                 </p>
               )}
@@ -164,8 +174,22 @@ export const BannerCarouselPreview: React.FC<{ component: TemplateComponent }> =
       {(title || subtitle) && (
         <div className="p-4 bg-color-surface banner-info-container">
           <div className="text-center">
-            {title && <h3 className="font-bold text-text-primary mb-1 banner-info-title dark:text-white">{title}</h3>}
-            {subtitle && <p className="text-sm text-text-secondary banner-info-subtitle dark:text-gray-300">{subtitle}</p>}
+            {title && (
+              <h3
+                className="font-bold text-text-primary mb-1 banner-info-title dark:text-white"
+                style={titleColorMode === 'custom' && customTitleColor ? { color: customTitleColor } : undefined}
+              >
+                {title}
+              </h3>
+            )}
+            {subtitle && (
+              <p
+                className="text-sm text-text-secondary banner-info-subtitle dark:text-gray-300"
+                style={subtitleColorMode === 'custom' && customSubtitleColor ? { color: customSubtitleColor } : undefined}
+              >
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -175,7 +199,21 @@ export const BannerCarouselPreview: React.FC<{ component: TemplateComponent }> =
 
 // 横幅轮播图实际组件（已发布页）
 export const BannerCarousel: React.FC<{ component: TemplateComponent }> = ({ component }) => {
-  const { title, subtitle, slides = [], autoPlay = true, interval = 5000, showIndicators = true, showArrows = true, widthOption = 'full', backgroundColorOption = 'default' } = component.props
+  const {
+    title,
+    subtitle,
+    slides = [],
+    autoPlay = true,
+    interval = 5000,
+    showIndicators = true,
+    showArrows = true,
+    widthOption = 'full',
+    backgroundColorOption = 'default',
+    titleColorMode = 'default',
+    customTitleColor = '',
+    subtitleColorMode = 'default',
+    customSubtitleColor = ''
+  } = component.props
   const containerClass = `${widthOption === 'standard' ? 'max-w-screen-2xl mx-auto' : 'w-full'} ${
     backgroundColorOption === 'transparent' ? '' : 'bg-color-surface'
   }`
@@ -197,8 +235,22 @@ export const BannerCarousel: React.FC<{ component: TemplateComponent }> = ({ com
       {(title || subtitle) && (
         <div className="p-4 bg-color-surface banner-info-container">
           <div className="text-center">
-            {title && <h3 className="font-bold text-text-primary mb-1 banner-info-title dark:text-white">{title}</h3>}
-            {subtitle && <p className="text-sm text-text-secondary banner-info-subtitle dark:text-gray-300">{subtitle}</p>}
+            {title && (
+              <h3
+                className="font-bold text-text-primary mb-1 banner-info-title dark:text-white"
+                style={titleColorMode === 'custom' && customTitleColor ? { color: customTitleColor } : undefined}
+              >
+                {title}
+              </h3>
+            )}
+            {subtitle && (
+              <p
+                className="text-sm text-text-secondary banner-info-subtitle dark:text-gray-300"
+                style={subtitleColorMode === 'custom' && customSubtitleColor ? { color: customSubtitleColor } : undefined}
+              >
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
       )}

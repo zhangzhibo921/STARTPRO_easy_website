@@ -21,13 +21,6 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({ config }) => {
           opacity: overlayOpacity
         }}
       />
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0%, transparent 60%),
-          radial-gradient(circle at 80% 0%, rgba(255,255,255,0.1) 0%, transparent 55%)`
-        }}
-      />
     </div>
   )
 }

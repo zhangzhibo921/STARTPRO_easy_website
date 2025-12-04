@@ -19,7 +19,7 @@ interface UserProfileModalProps {
   isOpen: boolean
   user: any
   onClose: () => void
-  onProfileUpdated: () => void
+  onProfileUpdated: () => Promise<void> | void
 }
 
 export default function UserProfileModal({ isOpen, user, onClose, onProfileUpdated }: UserProfileModalProps) {
@@ -53,18 +53,17 @@ export default function UserProfileModal({ isOpen, user, onClose, onProfileUpdat
   const onSubmit = async (data: UserProfileForm) => {
     setIsSubmitting(true)
     try {
-      const updateData: any = {
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        language: data.language
-      }
+      const email = (data.email || '').trim()
+
+      // 后端仅允许 email 更新，其余字段不参与提交以避免校验失败
+      const updateData: any = {}
+      if (email) updateData.email = email
 
       const response = await authApi.updateProfile(updateData)
 
       if (response.success) {
         toast.success('资料更新成功')
-        onProfileUpdated()
+        await Promise.resolve(onProfileUpdated())
         onClose()
       } else {
         toast.error(response.message || '资料更新失败')
@@ -147,23 +146,25 @@ export default function UserProfileModal({ isOpen, user, onClose, onProfileUpdat
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      名字
+                      名字（不可修改）
                     </label>
                     <input
                       {...register('firstName')}
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-tech-accent focus:border-tech-accent dark:bg-gray-700 dark:text-white"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-700/60 dark:text-gray-300 cursor-not-allowed"
                       placeholder="名字"
                     />
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      姓氏
+                      姓氏（不可修改）
                     </label>
                     <input
                       {...register('lastName')}
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-tech-accent focus:border-tech-accent dark:bg-gray-700 dark:text-white"
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-700/60 dark:text-gray-300 cursor-not-allowed"
                       placeholder="姓氏"
                     />
                   </div>

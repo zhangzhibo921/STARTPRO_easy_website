@@ -54,9 +54,38 @@ export const renderLogoScroll = (component: any): string => {
 
 export const renderLinkBlock = (component: any): string => {
   const { props = {} } = component
-  const { title, links = [] } = props
+  const {
+    title,
+    links = [],
+    backgroundColorOption = 'default',
+    linkStyle = 'gradient',
+    linkShape = 'pill',
+    linkGlow = true,
+    hoverEffect = 'lift'
+  } = props
+  const glowEnabled = linkGlow !== false && linkGlow !== 'false'
+  const buttonClass = [
+    'link-block__button',
+    `link-block__button--${linkStyle}`,
+    `link-block__button--${linkShape}`,
+    glowEnabled ? 'link-block__button--glow' : '',
+    hoverEffect ? `link-block__button--hover-${hoverEffect}` : ''
+  ]
+    .filter(Boolean)
+    .join(' ')
   const items = links
-    .map((link: any) => `<li><a href="${escapeHtml(link.href || '#')}">${escapeHtml(link.label || link.text || '')}</a></li>`)
+    .map(
+      (link: any) =>
+        `<li><a class="${buttonClass}" href="${escapeHtml(link.href || link.url || '#')}">${escapeHtml(
+          link.label || link.text || ''
+        )}</a></li>`
+    )
     .join('')
-  return wrapSection('link-block', `${renderHeading('h3', title)}<ul class="link-block__list">${items}</ul>`)
+  return wrapSection(
+    `link-block ${backgroundColorOption === 'transparent' ? 'link-block--transparent' : 'link-block--default'}`,
+    `<div class="link-block__inner">
+      ${renderHeading('h3', title)}
+      <ul class="link-block__list">${items}</ul>
+    </div>`
+  )
 }

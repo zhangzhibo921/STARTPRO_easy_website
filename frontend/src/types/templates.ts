@@ -62,6 +62,7 @@ export type ComponentType =
   | 'premium-pricing'
   | 'raw-html'
   | 'link-block'
+  | 'table'
 
 export interface ComponentDefinition {
   type: ComponentType

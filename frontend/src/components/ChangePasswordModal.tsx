@@ -64,10 +64,13 @@ export default function ChangePasswordModal({ isOpen, onClose, onPasswordChanged
 
     setIsSubmitting(true)
     try {
-      const response = await authApi.updateProfile({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword
-      })
+      const payload: any = {
+        current_password: data.currentPassword,
+        new_password: data.newPassword,
+        new_password_confirmation: data.confirmPassword
+      }
+
+      const response = await authApi.updateProfile(payload)
 
       if (response.success) {
         toast.success('密码修改成功')

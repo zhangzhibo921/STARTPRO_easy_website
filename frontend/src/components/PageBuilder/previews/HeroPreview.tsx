@@ -3,7 +3,20 @@ import { TemplateComponent } from '@/types/templates'
 import { motion } from 'framer-motion'
 
 export const HeroPreview: React.FC<{ component: TemplateComponent }> = ({ component }) => {
-  const { title, subtitle, backgroundImage, buttonText, buttonLink, backgroundColor, widthOption = 'full', backgroundColorOption = 'default' } = component.props
+  const {
+    title,
+    subtitle,
+    backgroundImage,
+    buttonText,
+    buttonLink,
+    backgroundColor,
+    widthOption = 'full',
+    backgroundColorOption = 'default',
+    titleColorMode = 'default',
+    customTitleColor = '',
+    subtitleColorMode = 'default',
+    customSubtitleColor = ''
+  } = component.props
   const [bgImageLoaded, setBgImageLoaded] = React.useState(false)
   const [bgImageError, setBgImageError] = React.useState(false)
 
@@ -88,6 +101,7 @@ export const HeroPreview: React.FC<{ component: TemplateComponent }> = ({ compon
         {title && (
           <motion.h1
             className="hero-title text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-text-primary"
+            style={titleColorMode === 'custom' && customTitleColor ? { color: customTitleColor } : undefined}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8 }}
@@ -99,6 +113,7 @@ export const HeroPreview: React.FC<{ component: TemplateComponent }> = ({ compon
         {subtitle && (
           <motion.p
             className="hero-subtitle text-xl md:text-2xl lg:text-3xl mb-10 opacity-95 leading-relaxed font-light text-text-secondary"
+            style={subtitleColorMode === 'custom' && customSubtitleColor ? { color: customSubtitleColor } : undefined}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}

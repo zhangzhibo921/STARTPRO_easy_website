@@ -12,13 +12,10 @@ export const useMetaInfo = () => {
     if (!isLoading && settings) {
       console.log('开始更新网站元信息:', settings)
       
-      // 更新favicon
+      // 更新favicon（仅当用户上传了自定义路径时）
       if (settings.site_favicon) {
         console.log('更新favicon:', settings.site_favicon)
         updateFavicon(settings.site_favicon)
-      } else {
-        console.log('未配置favicon，使用默认值')
-        updateFavicon('/favicon.ico')
       }
 
       // 更新页面标题

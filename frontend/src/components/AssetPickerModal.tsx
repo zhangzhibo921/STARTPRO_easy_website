@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { X, Search, Folder, Image as ImageIcon, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { uploadApi } from '@/utils/api'
@@ -40,9 +40,7 @@ interface AssetPickerModalProps {
   selectionMode?: 'single' | 'multiple'
 }
 
-const defaultTree: FolderItem[] = [
-  { id: 'root', name: '根目录', path: 'root', type: 'root', children: [] }
-]
+const defaultTree: FolderItem[] = [{ id: 'root', name: '根目录', path: 'root', type: 'root', children: [] }]
 
 const buildFolderTree = (flatFolders: FolderItem[] = []): FolderItem[] => {
   const rootName = flatFolders.find(folder => folder.id === 'root')?.name || '根目录'
@@ -58,13 +56,8 @@ const buildFolderTree = (flatFolders: FolderItem[] = []): FolderItem[] => {
     if (folder.id === 'root') return
     const currentPath = folder.path
     const node = pathToNode[currentPath]
-    let parentPath = ''
-    if (currentPath.includes('/')) {
-      const parts = currentPath.split('/')
-      if (parts.length > 1) {
-        parentPath = parts.slice(0, -1).join('/')
-      }
-    }
+    const parts = currentPath.split('/')
+    const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : ''
 
     if (parentPath && pathToNode[parentPath]) {
       pathToNode[parentPath].children?.push(node)
@@ -138,6 +131,9 @@ const AssetPickerModal = ({
     user: [],
     system: []
   })
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isLoadingFolders, setIsLoadingFolders] = useState(false)
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -179,9 +175,7 @@ const AssetPickerModal = ({
     }
     const list = files.system || []
     const targets = list.filter(file => isSystemSvgFile(file, 'system') && !svgPreviewCache[file.url])
-    if (!targets.length) {
-      return
-    }
+    if (!targets.length) return
 
     let cancelled = false
     const controller = new AbortController()
@@ -351,24 +345,66 @@ const AssetPickerModal = ({
     return list.filter(file => file.name.toLowerCase().includes(searchTerm.toLowerCase()))
   }, [files, activeSource, searchTerm])
 
+  const uploadFilesToCurrentFolder = async (filesToUpload: File[]) => {
+    if (!filesToUpload.length) return
+    if (activeSource !== 'user') {
+      toast.error('仅支持上传到“用户素材”')
+      return
+    }
+    const targetFolder = currentFolder.user || 'root'
+    try {
+      setIsUploading(true)
+      for (let i = 0; i < filesToUpload.length; i += 1) {
+        const file = filesToUpload[i]
+        setUploadProgress(0)
+        const uploader = file.type?.startsWith('image/') ? uploadApi.image : uploadApi.file
+        await uploader(
+          file,
+          progress => setUploadProgress(progress),
+          targetFolder !== 'root' ? targetFolder : undefined
+        )
+      }
+      toast.success(`成功上传 ${filesToUpload.length} 个文件`)
+      await loadFiles('user', targetFolder, 1, activeLimit)
+      setCurrentFolder(prev => ({ ...prev, user: targetFolder }))
+      setMeta(prev => ({ ...prev, user: { page: 1, totalPages: prev.user.totalPages } }))
+    } catch (error) {
+      console.error('上传素材失败', error)
+      toast.error('上传失败，请稍后重试')
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleUploadInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files
+    if (!fileList || !fileList.length) return
+    await uploadFilesToCurrentFolder(Array.from(fileList))
+  }
+
   const renderSystemIconPreview = (file: FileItem) => {
     const markup = svgPreviewCache[file.url]
     if (markup === '') {
       return (
-        <div className="w-full h-full flex items-center justify-center text-gray-400">
+        <div className="w-full h-full flex items-center justify-center text-theme-textSecondary">
           <ImageIcon className="w-7 h-7" />
         </div>
       )
     }
     if (!markup) {
       return (
-        <div className="w-full h-full flex items-center justify-center text-gray-400">
+        <div className="w-full h-full flex items-center justify-center text-theme-textSecondary">
           <Loader2 className="w-5 h-5 animate-spin" />
         </div>
       )
     }
     return (
-      <div className="w-full h-full flex items-center justify-center" style={{ color: '#0f172a', lineHeight: 0 }}>
+      <div
+        className="w-full h-full flex items-center justify-center"
+        style={{ color: 'var(--color-text-primary, #e2e8f0)', lineHeight: 0 }}
+      >
         <div
           className="w-20 h-20 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full [&>svg]:object-contain"
           dangerouslySetInnerHTML={{ __html: markup }}
@@ -383,7 +419,9 @@ const AssetPickerModal = ({
     <div key={folder.path} className="space-y-1">
       <button
         className={`flex items-center w-full px-2 py-1 text-sm rounded ${
-          currentFolder[activeSource] === folder.path ? 'bg-tech-accent text-black' : 'text-black hover:bg-gray-100'
+          currentFolder[activeSource] === folder.path
+            ? 'bg-tech-accent text-white'
+            : 'text-theme-textSecondary hover:bg-theme-surface'
         }`}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={() => handleFolderSelect(folder.path)}
@@ -402,15 +440,15 @@ const AssetPickerModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div
-        className="w-full max-w-5xl bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-hidden text-gray-900"
-        style={{ color: '#111827' }}
+        className="w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden text-theme-text border border-semantic-panelBorder"
+        style={{ backgroundColor: 'var(--semantic-panel-bg, #0f172a)' }}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-semantic-dividerStrong bg-theme-surfaceAlt">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">选择素材</h2>
-            <p className="text-sm text-gray-500">从用户素材或系统默认素材中选择图片 / 图标</p>
+            <h2 className="text-lg font-semibold text-theme-text">选择素材</h2>
+            <p className="text-sm text-theme-textSecondary">从用户素材或系统默认素材中选择图片 / 图标</p>
           </div>
-          <button className="p-2 text-gray-500 hover:text-gray-700" onClick={onClose}>
+          <button className="p-2 text-theme-textSecondary hover:text-theme-text" onClick={onClose}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -420,7 +458,9 @@ const AssetPickerModal = ({
             <button
               key={source}
               className={`px-4 py-2 rounded-full text-sm font-medium ${
-                activeSource === source ? 'bg-tech-accent text-white' : 'bg-gray-100 text-gray-700'
+                activeSource === source
+                  ? 'bg-tech-accent text-white shadow-[0_6px_18px_rgba(14,165,233,0.35)]'
+                  : 'bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text'
               }`}
               onClick={() => setActiveSource(source)}
             >
@@ -432,16 +472,16 @@ const AssetPickerModal = ({
         <div className="px-6 py-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="relative flex-1 min-w-[220px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-textSecondary" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="搜索素材..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-theme-divider rounded-lg bg-theme-surface text-theme-text theme-input focus:ring-2 focus:ring-tech-accent focus:border-transparent"
               />
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-theme-textSecondary">
               <span>每页数量</span>
               <select
                 value={activeLimit}
@@ -454,24 +494,62 @@ const AssetPickerModal = ({
                   }))
                   loadFiles(activeSource, currentFolder[activeSource], 1, newLimit)
                 }}
-                className="px-3 py-1 border border-gray-300 rounded bg-white text-gray-700 focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                className="px-3 py-1 border border-theme-divider rounded bg-theme-surface text-theme-textSecondary focus:ring-2 focus:ring-tech-accent focus:border-transparent"
+                style={{
+                  backgroundColor: 'var(--semantic-panel-bg, var(--color-surface, #0f172a))',
+                  color: 'var(--color-text-primary, #e2e8f0)',
+                  borderColor: 'var(--semantic-panel-border, var(--color-border, #334155))'
+                }}
               >
                 {pageLimitOptions.map(limit => (
-                  <option key={limit} value={limit}>{limit} 项/页</option>
+                  <option
+                    key={limit}
+                    value={limit}
+                    style={{
+                      backgroundColor: 'var(--semantic-panel-bg, var(--color-surface, #0f172a))',
+                      color: 'var(--color-text-primary, #e2e8f0)'
+                    }}
+                  >
+                    {limit} 项/页
+                  </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeSource !== 'user') {
+                    toast.error('仅支持上传到“用户素材”')
+                    return
+                  }
+                  fileInputRef.current?.click()
+                }}
+                className="ml-3 inline-flex items-center px-3 py-2 text-xs rounded border border-theme-divider bg-theme-surface text-theme-textSecondary hover:text-theme-text hover:bg-theme-surfaceAlt transition-colors disabled:opacity-50"
+                disabled={isUploading}
+              >
+                {isUploading ? `上传中 ${uploadProgress}%` : '上传素材'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleUploadInputChange}
+              />
             </div>
           </div>
         </div>
 
         <div className="px-6 pb-6 flex gap-4 max-h-[60vh]">
-          <div className="w-64 bg-gray-50 rounded-lg border border-gray-200 p-3 overflow-y-auto">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+          <div
+            className="w-64 rounded-lg border border-theme-divider p-3 overflow-y-auto"
+            style={{ backgroundColor: 'var(--semantic-muted-bg, var(--semantic-panel-bg, #0f172a))' }}
+          >
+            <h3 className="text-sm font-semibold text-theme-text mb-3 flex items-center">
               <Folder className="w-4 h-4 mr-2" />
               目录
             </h3>
             {isLoadingFolders ? (
-              <div className="flex items-center justify-center h-32 text-gray-500">
+              <div className="flex items-center justify-center h-32 text-theme-textSecondary">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 加载中...
               </div>
@@ -482,14 +560,17 @@ const AssetPickerModal = ({
             )}
           </div>
 
-          <div className="flex-1 bg-gray-50 rounded-lg border border-gray-200 p-4 overflow-y-auto">
+          <div
+            className="flex-1 rounded-lg border border-theme-divider p-4 overflow-y-auto"
+            style={{ backgroundColor: 'var(--semantic-muted-bg, var(--semantic-panel-bg, #0f172a))' }}
+          >
             {isLoadingFiles ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="flex items-center justify-center h-full text-theme-textSecondary">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 加载中...
               </div>
             ) : filteredFiles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <div className="flex flex-col items-center justify-center h-full text-theme-textSecondary">
                 <ImageIcon className="w-10 h-10 mb-2" />
                 <p>当前目录暂无素材</p>
               </div>
@@ -501,10 +582,10 @@ const AssetPickerModal = ({
                   return (
                     <button
                       key={file.path || file.url}
-                      className={`relative bg-white rounded-xl border ${
+                      className={`relative bg-theme-surface rounded-xl border ${
                         isSelected
                           ? 'border-tech-accent ring-2 ring-tech-accent/40'
-                          : 'border-gray-200'
+                          : 'border-theme-divider'
                       } shadow-sm hover:shadow transition-shadow overflow-hidden text-left`}
                       onClick={() => {
                         if (isMultiMode) {
@@ -520,13 +601,13 @@ const AssetPickerModal = ({
                           className={`absolute top-2 right-2 w-5 h-5 rounded-full border flex items-center justify-center text-xs ${
                             isSelected
                               ? 'bg-tech-accent border-tech-accent text-white'
-                              : 'bg-white border-gray-300 text-gray-400'
+                              : 'bg-theme-surface border-theme-divider text-theme-textSecondary'
                           }`}
                         >
                           ✓
                         </div>
                       )}
-                      <div className="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
+                      <div className="h-32 bg-theme-surfaceAlt flex items-center justify-center overflow-hidden">
                         {isSystemSvgFile(file, activeSource) ? (
                           renderSystemIconPreview(file)
                         ) : isImageFile(file) ? (
@@ -540,15 +621,15 @@ const AssetPickerModal = ({
                             }}
                           />
                         ) : (
-                          <div className="flex flex-col items-center text-gray-500">
+                          <div className="flex flex-col items-center text-theme-textSecondary">
                             <ImageIcon className="w-8 h-8 mb-2" />
                             <span className="text-xs">{file.type || '文件'}</span>
                           </div>
                         )}
                       </div>
                       <div className="p-3">
-                        <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                        <p className="text-sm font-medium text-theme-text truncate">{file.name}</p>
+                        <p className="text-xs text-theme-textSecondary mt-1">{(file.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </button>
                   )
@@ -558,10 +639,10 @@ const AssetPickerModal = ({
 
             {isMultiMode && (
               <div className="flex items-center justify-between mt-4">
-                <span className="text-xs text-gray-500">已选择 {selectedCount} 个素材</span>
+                <span className="text-xs text-theme-textSecondary">已选择 {selectedCount} 个素材</span>
                 <div className="space-x-2">
                   <button
-                    className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50"
+                    className="px-3 py-1 text-sm border border-theme-divider rounded bg-theme-surface text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
                     onClick={() => setMultiSelection({})}
                     disabled={selectedCount === 0}
                   >
@@ -579,19 +660,19 @@ const AssetPickerModal = ({
             )}
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-theme-textSecondary">
                 第 {meta[activeSource].page} / {meta[activeSource].totalPages} 页
               </span>
               <div className="space-x-2">
                 <button
-                  className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50"
+                  className="px-3 py-1 text-sm border border-theme-divider rounded bg-theme-surface text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
                   onClick={() => handlePageChange('prev')}
                   disabled={meta[activeSource].page <= 1}
                 >
                   上一页
                 </button>
                 <button
-                  className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50"
+                  className="px-3 py-1 text-sm border border-theme-divider rounded bg-theme-surface text-theme-textSecondary hover:text-theme-text disabled:opacity-50"
                   onClick={() => handlePageChange('next')}
                   disabled={meta[activeSource].page >= meta[activeSource].totalPages}
                 >

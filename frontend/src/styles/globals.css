@@ -115,6 +115,12 @@ body {
 /* 避免自定义 HTML 片段产生内层滚动条 */
 .raw-html-section {
   overflow: visible !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
 }
 
 /* 让页面主体由 body 管理滚动，避免 main 自己出现滚动条 */
@@ -220,6 +226,16 @@ main.main-content {
 
 .delay-2000 {
   animation-delay: 2s;
+}
+
+.text-block.align-center,
+.text-block.align-center .text-body {
+  text-align: center;
+}
+
+.text-block.align-right,
+.text-block.align-right .text-body {
+  text-align: right;
 }
 
 /* 高级动画效果 */
@@ -334,11 +350,26 @@ main.main-content {
   display: inline-block;
   padding: 0.1rem 0;
   transform: translateX(0);
+  text-decoration: none;
 }
 
 .footer-link:hover {
   color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent);
+  text-underline-offset: 3px;
   transform: translateX(4px);
+}
+
+.footer-nav-link {
+  text-decoration: none;
+}
+
+.footer-nav-link:hover {
+  color: var(--color-accent, #06B6D4);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent, #06B6D4);
+  text-underline-offset: 3px;
 }
 
 .footer-description {

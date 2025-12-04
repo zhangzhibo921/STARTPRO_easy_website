@@ -24,13 +24,6 @@ const PatternBackground: React.FC<PatternBackgroundProps> = ({ config }) => {
           opacity: 0.6
         }}
       />
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(circle at 10% 20%, rgba(255,255,255,0.18), transparent 55%),
-            radial-gradient(circle at 85% 10%, rgba(255,255,255,0.12), transparent 55%)`
-        }}
-      />
     </div>
   )
 }

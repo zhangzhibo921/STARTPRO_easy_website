@@ -6,9 +6,24 @@ interface LinkBlockEditorProps {
   onAdd: () => void
   onChange: (index: number, fieldKey: string, value: any) => void
   onRemove: (index: number) => void
+  linkStyle: string
+  linkShape: string
+  linkGlow: boolean
+  hoverEffect: string
+  onStyleChange: (key: string, value: any) => void
 }
 
-const LinkBlockEditor: React.FC<LinkBlockEditorProps> = ({ links, onAdd, onChange, onRemove }) => {
+const LinkBlockEditor: React.FC<LinkBlockEditorProps> = ({
+  links,
+  onAdd,
+  onChange,
+  onRemove,
+  linkStyle,
+  linkShape,
+  linkGlow,
+  hoverEffect,
+  onStyleChange
+}) => {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
@@ -51,6 +66,57 @@ const LinkBlockEditor: React.FC<LinkBlockEditorProps> = ({ links, onAdd, onChang
           />
         </div>
       ))}
+
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">按钮样式</label>
+          <select
+            value={linkStyle}
+            onChange={(e) => onStyleChange('linkStyle', e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-lg theme-input"
+          >
+            <option value="gradient">渐变</option>
+            <option value="solid">填充</option>
+            <option value="outline">描边</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">圆角</label>
+          <select
+            value={linkShape}
+            onChange={(e) => onStyleChange('linkShape', e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-lg theme-input"
+          >
+            <option value="pill">胶囊</option>
+            <option value="rounded">圆角</option>
+            <option value="square">直角</option>
+          </select>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={linkGlow}
+            onChange={(e) => onStyleChange('linkGlow', e.target.checked)}
+            className="rounded border-theme-divider text-tech-accent focus:ring-tech-accent"
+          />
+          开启流光/光晕
+        </label>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">悬浮特效</label>
+          <select
+            value={hoverEffect}
+            onChange={(e) => onStyleChange('hoverEffect', e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-lg theme-input"
+          >
+            <option value="lift">浮起</option>
+            <option value="glow">发光</option>
+            <option value="none">关闭</option>
+          </select>
+        </div>
+      </div>
     </div>
   )
 }

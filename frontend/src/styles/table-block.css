@@ -1,0 +1,82 @@
+.table-block {
+  width: 100%;
+}
+
+.table-block--default {
+  background: var(--color-surface, #0f172a);
+  border-radius: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.16);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.table-block--transparent {
+  background: transparent;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.table-block__title {
+  color: var(--color-text-primary, #e2e8f0);
+  text-align: left;
+}
+
+.table-block__wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.14);
+}
+
+.table-block__table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--color-text-primary, #e2e8f0);
+  min-width: 420px;
+}
+
+.table-block__th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-primary, #e2e8f0);
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.18);
+  border-right: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.16);
+  background: rgba(var(--color-surface-rgb, 15, 23, 42), 0.82);
+}
+
+.table-block__td {
+  padding: 0.75rem 0.85rem;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary, #cbd5e1);
+  border-bottom: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.12);
+  border-right: 1px solid rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.12);
+  background: rgba(var(--color-surface-rgb, 15, 23, 42), 0.4);
+}
+
+.table-block__td:last-child,
+.table-block__th:last-child {
+  border-right: none;
+}
+
+.table-block__th.align-center,
+.table-block__td.align-center {
+  text-align: center;
+}
+
+.table-block__th.align-right,
+.table-block__td.align-right {
+  text-align: right;
+}
+
+.table-block__table tbody tr:nth-child(even) .table-block__td {
+  background: rgba(var(--color-surface-rgb, 15, 23, 42), 0.32);
+}
+
+.table-block__table tbody tr:hover .table-block__td {
+  background: rgba(var(--color-text-muted-rgb, 156, 163, 175), 0.08);
+}
+
+.table-block__table tr:last-child .table-block__td {
+  border-bottom: none;
+}

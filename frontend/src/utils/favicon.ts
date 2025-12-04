@@ -19,16 +19,14 @@ export const updateFavicon = (faviconUrl: string) => {
   console.log('更新favicon:', faviconUrl)
 
   // 由于Next.js已经配置了uploads代理，直接使用路径即可
+  if (!faviconUrl) {
+    console.log('未提供自定义 favicon，跳过更新')
+    return
+  }
+
   let finalFaviconUrl = faviconUrl
-  
-  if (faviconUrl) {
-    // 确保以/开头的路径
-    if (!faviconUrl.startsWith('/') && !faviconUrl.startsWith('http')) {
-      finalFaviconUrl = `/${faviconUrl}`
-    }
-  } else {
-    // 默认favicon
-    finalFaviconUrl = '/favicon.ico'
+  if (!faviconUrl.startsWith('/') && !faviconUrl.startsWith('http')) {
+    finalFaviconUrl = `/${faviconUrl}`
   }
 
   console.log('最终favicon URL:', finalFaviconUrl)

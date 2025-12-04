@@ -59,8 +59,8 @@ export default function AdminLogin() {
       if (response.success) {
         // 保存token
         console.log('设置cookie, token:', response.data.token)
-        Cookies.set('auth-token', response.data.token, { 
-          expires: 7,
+        Cookies.set('auth-token', response.data.token, {
+          // 不设置 expires => 会话 Cookie，关闭浏览器后失效
           secure: false, // 开发环境中设置为false
           sameSite: 'lax'
         })

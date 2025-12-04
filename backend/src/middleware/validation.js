@@ -125,6 +125,12 @@ const settingsSchemas = {
     contact_phone: Joi.string().max(20).optional().allow(''),
     address: Joi.string().max(200).optional().allow(''),
     icp_number: Joi.string().max(50).optional(),
+    allow_search_index: Joi.boolean().optional(),
+    verification_tags: Joi.object({
+      google: Joi.string().max(200).optional().allow('', null),
+      bing: Joi.string().max(200).optional().allow('', null),
+      baidu: Joi.string().max(200).optional().allow('', null)
+    }).optional(),
     copyright: Joi.string().max(500).optional().allow(''),
     analytics_code: Joi.string().optional().allow(''),
     nav_color_style: Joi.string().valid('default', 'dark', 'blue', 'green').optional(),
@@ -176,8 +182,13 @@ const settingsSchemas = {
     ).optional(),
     theme_background: Joi.string()
       .valid('theme-default', 'starfield', 'gradient', 'pattern')
-      .optional()
-  })
+      .optional(),
+    verification_tags: Joi.object({
+      google: Joi.string().max(200).optional().allow('', null),
+      bing: Joi.string().max(200).optional().allow('', null),
+      baidu: Joi.string().max(200).optional().allow('', null)
+    }).optional()
+  }).unknown(false)
 }
 
 // 通知/邮件与联系表单校验

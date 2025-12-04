@@ -14,21 +14,16 @@ import {
   Menu,
   Link as LinkIcon,
   Plus,
-  Trash2,
-  User,
-  Key,
-  ChevronDown
+  Trash2
 } from 'lucide-react'
 import AdminLayout from '@/components/AdminLayout'
 import ThemeAwareFooter from '@/components/ThemeAwareFooter'
-import UserProfileModal from '@/components/UserProfileModal'
-import ChangePasswordModal from '@/components/ChangePasswordModal'
 import AssetPickerModal, { SelectedAsset } from '@/components/AssetPickerModal'
 import { ThemeAwareInput, ThemeAwareSelect, ThemeAwareTextarea } from '@/components/ThemeAwareFormControls'
 import BackgroundRenderer from '@/components/theme-backgrounds/BackgroundRenderer'
 import FontSelector from '@/components/admin/settings/FontSelector'
 import toast from 'react-hot-toast'
-import { settingsApi, authApi } from '@/utils/api'
+import { settingsApi } from '@/utils/api'
 import { useSettings } from '@/contexts/SettingsContext'
 import type { Settings, FooterSection, FooterLayout, FooterSocialLink } from '@/types'
 import { getThemeById, resolveBackgroundEffect, type ThemeBackgroundChoice } from '@/styles/themes'
@@ -105,6 +100,24 @@ const sanitizeSettingsPayload = (data: Settings): Settings => {
   payload.footer_social_links = sanitizeFooterSocialLinksPayload(data.footer_social_links)
   payload.site_statement = (data.site_statement || '').trim()
   payload.icp_link = (data.icp_link || '').trim()
+  payload.allow_search_index = data.allow_search_index !== false
+  // 清理验证标签中的空值，并提取 content 代码片段
+  const extractCode = (value: string) => {
+    const trimmed = (value || '').trim()
+    if (!trimmed) return ''
+    const contentMatch = trimmed.match(/content=["']([^"']+)["']/i)
+    if (contentMatch && contentMatch[1]) return contentMatch[1].trim()
+    const noTags = trimmed.replace(/<[^>]+>/g, '').trim()
+    return noTags
+  }
+  if (payload.verification_tags && typeof payload.verification_tags === 'object') {
+    const cleaned: any = {}
+    Object.entries(payload.verification_tags as Record<string, any>).forEach(([k, v]) => {
+      const val = typeof v === 'string' ? extractCode(v) : ''
+      if (val) cleaned[k] = val
+    })
+    payload.verification_tags = cleaned
+  }
   delete payload.nav_layout_style
   delete payload.site_record
   delete payload.theme_overrides
@@ -121,9 +134,6 @@ export default function AdminSettingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [settings, setSettings] = useState<Settings | null>(null)
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [user, setUser] = useState<any>(null)
   const [isAssetPickerOpen, setIsAssetPickerOpen] = useState(false)
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerSource, setAssetPickerSource] = useState<'user' | 'system'>('user')
@@ -149,6 +159,12 @@ export default function AdminSettingsPage() {
       site_logo: '',
       site_favicon: '',
       icp_number: '',
+      allow_search_index: true,
+      verification_tags: {
+        google: '',
+        bing: '',
+        baidu: ''
+      },
       site_font: 'inter',
       site_font_custom_name: '',
       site_font_url: '',
@@ -203,19 +219,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     fetchSettings()
-    fetchUserProfile()
   }, [])
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await authApi.getProfile()
-      if (response.success) {
-        setUser(response.data)
-      }
-    } catch (error) {
-      console.error('获取用户信息失败:', error)
-    }
-  }
 
   const fetchSettings = async () => {
     try {
@@ -236,6 +240,8 @@ export default function AdminSettingsPage() {
           contact_phone: (serverSettings as any)?.contact_phone || '',
           address: (serverSettings as any)?.address || '',
           icp_number: (serverSettings as any)?.icp_number || '',
+          allow_search_index: (serverSettings as any)?.allow_search_index !== false,
+          verification_tags: (serverSettings as any)?.verification_tags || {},
           social_links: (serverSettings as any)?.social_links || {},
           site_font: (serverSettings as any)?.site_font || 'inter',
           site_font_custom_name: (serverSettings as any)?.site_font_custom_name || '',
@@ -374,6 +380,10 @@ export default function AdminSettingsPage() {
     setIsSaving(true)
     try {
       const payload = sanitizeSettingsPayload(data)
+      // 若验证标签为空对象则移除，避免后端写入空对象
+      if (payload.verification_tags && Object.keys(payload.verification_tags as any).length === 0) {
+        delete (payload as any).verification_tags
+      }
       const response = await settingsApi.update(payload)
       if (response.success) {
         toast.success('设置保存成功')
@@ -404,17 +414,6 @@ export default function AdminSettingsPage() {
   return (
     <AdminLayout title="系统设置" description="管理站点主题、品牌、页脚与社交信息">
       <div className="space-y-6">
-        {/* 概览 */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-theme-surfaceAlt p-6 rounded-xl border border-semantic-panelBorder shadow-md">
-          <div className="flex items-center space-x-3">
-            <SettingsIcon className="w-6 h-6 text-theme-accent" />
-            <div>
-              <h1 className="text-2xl font-bold text-theme-text">系统设置</h1>
-              <p className="text-theme-textSecondary text-sm">集中管理品牌、备案、页脚与社交媒体配置</p>
-            </div>
-          </div>
-        </motion.div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* 站点信息与全局 SEO */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="bg-semantic-panel p-6 rounded-xl shadow-xl border border-semantic-panelBorder space-y-6">
@@ -426,7 +425,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">站点名称</label>
                 <ThemeAwareInput type="text" {...register('site_name' as const)} placeholder="请输入站点名称" />
@@ -435,52 +434,102 @@ export default function AdminSettingsPage() {
                 <label className="block text-sm font-medium text-theme-text mb-1">公司名称</label>
                 <ThemeAwareInput type="text" {...register('company_name' as const)} placeholder="用于页眉/页脚展示的公司名称" />
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-theme-text mb-1">SEO 描述</label>
-                <ThemeAwareTextarea rows={3} {...register('site_description' as const)} placeholder="用于搜索引擎与社交分享的页面描述" />
-              </div>
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">SEO 关键词</label>
                 <ThemeAwareInput type="text" {...register('site_keywords' as const)} placeholder="关键词之间用逗号分隔，例如：产品,服务,公司" />
               </div>
+              <div className="md:col-span-3">
+                <label className="block text-sm font-medium text-theme-text mb-1">SEO 描述</label>
+                <ThemeAwareTextarea rows={1} {...register('site_description' as const)} placeholder="用于搜索引擎与社交分享的页面描述" />
+              </div>
+              <div className="md:col-span-3">
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-theme-text">
+                  <input
+                    type="checkbox"
+                    {...register('allow_search_index' as const)}
+                    className="h-4 w-4 text-tech-accent border-theme-divider rounded"
+                    defaultChecked
+                  />
+                  <span>允许搜索引擎收录</span>
+                </label>
+                <p className="text-xs text-theme-textSecondary mt-1">关闭后会输出 robots noindex，阻止搜索引擎收录。</p>
+              </div>
+              <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-1">Google 验证（google-site-verification）</label>
+                  <ThemeAwareInput type="text" {...register('verification_tags.google' as const)} placeholder="填写 Google 验证代码" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-1">Bing 验证（msvalidate.01）</label>
+                  <ThemeAwareInput type="text" {...register('verification_tags.bing' as const)} placeholder="填写 Bing 验证代码" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-theme-text mb-1">百度验证（baidu-site-verification）</label>
+                  <ThemeAwareInput type="text" {...register('verification_tags.baidu' as const)} placeholder="填写百度验证代码" />
+                </div>
+                <div className="md:col-span-3">
+                  <p className="text-xs text-theme-textSecondary">
+                    留空则不输出对应验证标签；仅填写“验证代码”即可，系统会自动生成 meta 标签。
+                    如果粘贴了整段 &lt;meta ... content="xxxx" /&gt;，会自动提取 content 中的值。
+                  </p>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">Logo</label>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <ThemeAwareInput
-                    type="text"
-                    readOnly
-                    value={watchedLogo || ''}
-                    placeholder="请选择或上传品牌 Logo"
-                    className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => openAssetPicker({ type: 'siteLogo' }, watchedLogo)}
-                    className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    选择素材
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
+                    <ThemeAwareInput
+                      type="text"
+                      readOnly
+                      value={watchedLogo || ''}
+                      placeholder="请选择或上传品牌 Logo"
+                      className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openAssetPicker({ type: 'siteLogo' }, watchedLogo)}
+                      className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm"
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      选择素材
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-center w-14 h-14 rounded-lg border border-theme-divider bg-theme-surfaceAlt overflow-hidden">
+                    {watchedLogo ? (
+                      <img src={watchedLogo} alt="Logo 预览" className="w-full h-full object-contain" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-theme-textSecondary" />
+                    )}
+                  </div>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">Favicon</label>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <ThemeAwareInput
-                    type="text"
-                    readOnly
-                    value={watchedFavicon || ''}
-                    placeholder="/favicon.ico"
-                    className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => openAssetPicker({ type: 'siteFavicon' }, watchedFavicon)}
-                    className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    选择素材
-                  </button>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <div className="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
+                    <ThemeAwareInput
+                      type="text"
+                      readOnly
+                      value={watchedFavicon || ''}
+                      placeholder="/favicon.ico"
+                      className="flex-1 cursor-not-allowed bg-theme-surfaceAlt text-theme-textSecondary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openAssetPicker({ type: 'siteFavicon' }, watchedFavicon)}
+                      className="inline-flex items-center px-3 py-2 rounded-lg border border-theme-divider bg-theme-surfaceAlt text-theme-textSecondary hover:text-theme-text transition-colors text-sm"
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      选择素材
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-center w-14 h-14 rounded-lg border border-theme-divider bg-theme-surfaceAlt overflow-hidden">
+                    {watchedFavicon ? (
+                      <img src={watchedFavicon} alt="Favicon 预览" className="w-full h-full object-contain" />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-theme-textSecondary" />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -497,7 +546,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-theme-text mb-1">网站声明 / 公司简介</label>
-                <ThemeAwareTextarea rows={3} {...register('site_statement' as const)} placeholder="用于页脚展示的公司简介或站点声明" />
+                <ThemeAwareTextarea rows={1} {...register('site_statement' as const)} placeholder="用于页脚展示的公司简介或站点声明" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">ICP备案号</label>
@@ -506,24 +555,6 @@ export default function AdminSettingsPage() {
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">ICP备案链接</label>
                 <ThemeAwareInput type="url" {...register('icp_link' as const)} placeholder="请输入工信部备案查询链接" />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* 账户安全 */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-semantic-panel p-6 rounded-xl shadow-xl border border-semantic-panelBorder">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-theme-text">账户安全</h2>
-                <p className="text-sm text-theme-textSecondary">查看当前登录账号，支持更新资料与修改密码</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={() => setShowProfileModal(true)} className="px-4 py-2 rounded-lg border border-semantic-panelBorder text-theme-textSecondary hover:text-theme-text transition-colors">
-                  查看个人资料
-                </button>
-                <button type="button" onClick={() => setShowPasswordModal(true)} className="px-4 py-2 rounded-lg bg-semantic-cta-primary text-white shadow-semantic hover:opacity-90 transition-opacity">
-                  修改密码
-                </button>
               </div>
             </div>
           </motion.div>
@@ -608,7 +639,7 @@ export default function AdminSettingsPage() {
                 <label className="block text-sm font-medium text-theme-text mb-1">品牌名称</label>
                 <ThemeAwareInput type="text" {...register('footer_layout.brand.name' as const)} className="px-3" />
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-theme-text mb-1">品牌描述</label>
                 <ThemeAwareInput type="text" {...register('footer_layout.brand.description' as const)} className="px-3" placeholder="一句话描述品牌定位" />
               </div>
@@ -873,8 +904,6 @@ export default function AdminSettingsPage() {
         </form>
 
         <AssetPickerModal isOpen={isAssetPickerOpen} onClose={closeAssetPicker} onSelect={handleAssetSelect} initialSource={assetPickerSource} />
-        <UserProfileModal isOpen={showProfileModal} user={user} onClose={() => setShowProfileModal(false)} onProfileUpdated={fetchUserProfile} />
-        <ChangePasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} onPasswordChanged={fetchUserProfile} />
       </div>
     </AdminLayout>
   )

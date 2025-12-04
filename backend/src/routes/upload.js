@@ -8,11 +8,15 @@ const { authenticateToken, requireEditor } = require('../middleware/auth')
 
 // 确保上传目录存在
 const uploadsDir = path.join(__dirname, '../../uploads')
+const publicDir = path.join(__dirname, '../../public')
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true })
+}
 const imagesDir = path.join(uploadsDir, 'images')
 const filesDir = path.join(uploadsDir, 'files')
 

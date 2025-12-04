@@ -49,7 +49,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           site_font_url: (response.data as any)?.site_font_url || '',
           footer_layout: response.data.footer_layout ?? getDefaultFooterLayout(),
           footer_social_links: response.data.footer_social_links ?? [],
-          theme_background: response.data.theme_background ?? 'theme-default'
+          theme_background: response.data.theme_background ?? 'theme-default',
+          allow_search_index: (response.data as any)?.allow_search_index !== false,
+          verification_tags: (response.data as any)?.verification_tags || {}
         }
         setSettings(settingsWithDefaults)
       } else {
@@ -64,13 +66,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           site_statement: '',
           icp_link: '',
           site_logo: '/logo.png',
-          site_favicon: '/favicon.ico',
+          site_favicon: '',
           contact_email: 'contact@example.com',
           contact_phone: '400-123-4567',
           address: '??????????',
           icp_number: '?ICP?xxxxxxxx?',
           analytics_code: '',
           site_theme: 'neo-futuristic',
+          allow_search_index: true,
+          verification_tags: {},
           social_links: {
             weibo: '',
             wechat: '',
@@ -97,20 +101,22 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         site_name: '??????',
         company_name: '????',
           site_description: '???????????????????',
-          site_keywords: '',
+        site_keywords: '',
         site_font: 'inter',
         site_font_custom_name: '',
         site_font_url: '',
         site_statement: '',
         icp_link: '',
         site_logo: '/logo.png',
-        site_favicon: '/favicon.ico',
+        site_favicon: '',
         contact_email: 'contact@example.com',
         contact_phone: '400-123-4567',
         address: '??????????',
         icp_number: '?ICP?xxxxxxxx?',
         analytics_code: '',
         site_theme: 'neo-futuristic',
+        allow_search_index: true,
+        verification_tags: {},
         social_links: {
           weibo: '',
           wechat: '',
