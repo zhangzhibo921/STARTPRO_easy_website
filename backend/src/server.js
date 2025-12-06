@@ -120,6 +120,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // 静态文件服务
 app.use('/uploads', express.static('uploads'))
+// 为系统默认素材提供一个经过 /uploads 前缀的访问路径，兼容前端现有代理规则
+app.use('/uploads/system-default', express.static('system-default'))
 app.use('/system-default', express.static('system-default'))
 
 // 数据库连接
@@ -136,6 +138,7 @@ const systemDefaultRoutes = require('./routes/system-default')
 const tagsRoutes = require('./routes/tags')
 const notificationRoutes = require('./routes/notifications')
 const contactRoutes = require('./routes/contact')
+const docsRoutes = require('./routes/docs')
 
 normalizeSystemDefaultSvgs()
   .then(summary => {
@@ -157,6 +160,7 @@ app.use('/api/system-default', systemDefaultRoutes)
 app.use('/api/tags', tagsRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/contact', contactRoutes)
+app.use('/api/docs', docsRoutes)
 
 // 健康检查端点
 app.get('/api/health', (req, res) => {

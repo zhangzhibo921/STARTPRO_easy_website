@@ -262,6 +262,58 @@ const querySchemas = {
   }).unknown(true)
 }
 
+// 文档中心校验
+const slugPathPattern = /^[a-z0-9]+(?:[a-z0-9-_]*[a-z0-9])?(?:\/[a-z0-9]+(?:[a-z0-9-_]*[a-z0-9])?)*$/
+const docSchemas = {
+  create: Joi.object({
+    title: Joi.string().min(1).max(255).required(),
+    slug: Joi.string().pattern(slugPathPattern).min(1).max(255).required(),
+    type: Joi.string().valid('doc', 'folder').default('doc'),
+    parent_id: Joi.alternatives().try(
+      Joi.number().integer().positive(),
+      Joi.valid(null, '')
+    ).optional(),
+    sort_order: Joi.alternatives().try(
+      Joi.number().integer().min(0),
+      Joi.string().trim().valid('')
+    ).default(0),
+    status: Joi.string().valid('draft', 'published').default('draft'),
+    content: Joi.string().allow('').required(),
+    summary: Joi.string().allow('', null).max(2000).optional(),
+    cover: Joi.string().allow('', null).max(255).optional()
+  }),
+  update: Joi.object({
+    title: Joi.string().min(1).max(255).optional(),
+    slug: Joi.string().pattern(slugPathPattern).min(1).max(255).optional(),
+    type: Joi.string().valid('doc', 'folder').optional(),
+    parent_id: Joi.alternatives().try(
+      Joi.number().integer().positive(),
+      Joi.valid(null, '')
+    ).optional(),
+    sort_order: Joi.alternatives().try(
+      Joi.number().integer().min(0),
+      Joi.string().trim().valid('')
+    ).optional(),
+    status: Joi.string().valid('draft', 'published').optional(),
+    content: Joi.string().allow('').optional(),
+    summary: Joi.string().allow('', null).max(2000).optional(),
+    cover: Joi.string().allow('', null).max(255).optional()
+  }).unknown(true),
+  listQuery: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(10),
+    search: Joi.string().allow('', null).max(255).optional(),
+    status: Joi.string().valid('draft', 'published').optional(),
+    parent_id: Joi.alternatives().try(
+      Joi.number().integer().positive(),
+      Joi.valid(null, '')
+    ).optional()
+  }).unknown(true),
+  slugPath: Joi.object({
+    slugPath: Joi.string().pattern(slugPathPattern).required()
+  }).unknown(true)
+}
+
 module.exports = {
   validate,
   validateLogin: validate(userSchemas.login),
@@ -281,5 +333,9 @@ module.exports = {
   validateContactSubmission: validate(notificationSchemas.contactSubmission),
   validateAdminMessagesQuery: validate(notificationSchemas.adminMessagesQuery, 'query'),
   validateMarkRead: validate(notificationSchemas.markRead),
-  validateResendMessage: validate(notificationSchemas.resendMessage)
+  validateResendMessage: validate(notificationSchemas.resendMessage),
+  validateCreateDoc: validate(docSchemas.create),
+  validateUpdateDoc: validate(docSchemas.update),
+  validateDocListQuery: validate(docSchemas.listQuery, 'query'),
+  validateDocSlugPath: validate(docSchemas.slugPath, 'params')
 }

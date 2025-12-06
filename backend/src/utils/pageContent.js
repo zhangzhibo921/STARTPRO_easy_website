@@ -18,6 +18,41 @@ const renderList = (items) =>
     ? `<ul>${items.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
     : ''
 
+// 将 <style> 中的选择器加上作用域前缀，避免污染全局
+const scopeStylesToClass = (html, scopeClass) => {
+  if (!html || html.indexOf('<style') === -1) return html
+  const prefixSelectors = (css) => {
+    css = css.replace(/@media[^{]*{([\s\S]*?)}/gi, (m, inner) => {
+      const prefixed = prefixSelectors(inner)
+      return m.replace(inner, prefixed)
+    })
+    return css.replace(/(^|})([^@{}][^{}]*?){/g, (_m, sep, selectors) => {
+      const scopedSelectors = selectors
+        .split(',')
+        .map((s) => {
+          const trimmed = s.trim()
+          if (!trimmed) return ''
+          if (trimmed.includes(scopeClass)) return trimmed
+          return `.${scopeClass} ${trimmed}`
+        })
+        .filter(Boolean)
+        .join(', ')
+      return `${sep}${scopedSelectors} {`
+    })
+  }
+
+  try {
+    return html.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_match, css) => {
+      const transformed = prefixSelectors(css)
+      return `<style>${transformed}</style>`
+    })
+  } catch (err) {
+    console.error('Raw HTML scoping failed:', err)
+    // 遇到异常时，移除 <style> 避免污染
+    return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+  }
+}
+
 // Basic renderers (kept concise; align with frontend list for consistency)
 const renderers = {
   'hero': (c) => {
@@ -231,6 +266,13 @@ const renderers = {
         p.poster ? `poster="${escapeHtml(p.poster)}"` : ''
       }>${p.url ? `<source src="${escapeHtml(p.url)}" />` : ''}</video>`
     )
+  },
+  'raw-html': (c) => {
+    const p = c.props || {}
+    const html = p.html || ''
+    const baseClass = p.className || 'raw-html-block'
+    // 复杂 HTML 保持原样，不做样式作用域，避免破坏全局选择器/脚本
+    return wrapSection(`${baseClass} raw-html-section`, html)
   },
   // Premium variants reuse base renderers
   'premium-hero': (c) => renderers['hero'](c),

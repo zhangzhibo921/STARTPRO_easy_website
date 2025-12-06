@@ -18,8 +18,9 @@ export const useMetaInfo = () => {
         updateFavicon(settings.site_favicon)
       }
 
-      // 更新页面标题
-      if (settings.site_name) {
+      // 更新页面标题（非 docs 页）；docs 页内部会自定义标题
+      const isDocsPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/docs')
+      if (!isDocsPage && settings.site_name) {
         console.log('更新页面标题:', settings.site_name)
         updateTitle(settings.site_name)
       }

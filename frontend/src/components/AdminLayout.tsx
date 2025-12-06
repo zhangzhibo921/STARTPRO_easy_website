@@ -54,6 +54,11 @@ const menuItems: MenuItem[] = [
     icon: <FileText className="w-5 h-5" />
   },
   {
+    label: '文档中心',
+    href: '/admin/docs',
+    icon: <FileText className="w-5 h-5" />
+  },
+  {
     label: '导航管理',
     href: '/admin/navigation',
     icon: <Menu className="w-5 h-5" />
@@ -175,6 +180,24 @@ export default function AdminLayout({
     return router.pathname.startsWith(href)
   }
 
+  const logoSrc = settings?.site_logo || '/system-default/元兴logo.png'
+  const siteName = settings?.site_name || '管理员后台'
+
+  useEffect(() => {
+    if (!settings?.site_favicon) return
+    const applyFavicon = (rel: string) => {
+      let link = document.querySelector<HTMLLinkElement>(`link[rel='${rel}']`)
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = rel
+        document.head.appendChild(link)
+      }
+      link.href = settings.site_favicon as string
+    }
+    applyFavicon('icon')
+    applyFavicon('shortcut icon')
+  }, [settings?.site_favicon])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-semantic-mutedBg text-theme-text flex items-center justify-center transition-colors">
@@ -201,12 +224,13 @@ export default function AdminLayout({
         <div className="fixed inset-y-0 left-0 z-50 w-64 bg-semantic-panel transform transition-transform duration-300 lg:translate-x-0">
           {/* Logo区域 */}
           <div className="flex items-center justify-between h-16 px-6">
-            <Link href="/admin/dashboard" className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-theme-primary to-theme-accent text-white shadow-md">
-                <img src="/system-default/元兴logo.png" alt="Logo"  className="h-4 w-4"/>
-              </div>
-              <span className="text-lg font-semibold text-theme-text">管理员后台</span>
-            </Link>
+              <Link href="/admin/dashboard" className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-theme-primary to-theme-accent text-white shadow-md">
+                  {logoSrc ? <img src={logoSrc} alt="Logo" className="h-6 w-auto object-contain" /> : null}
+                </div>
+                {/* <span className="text-lg font-semibold text-theme-text">{siteName}</span> */}
+                <span className="text-lg font-semibold text-theme-text">管理员后台</span>
+              </Link>
             
             <button
               onClick={() => setIsSidebarOpen(false)}

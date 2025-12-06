@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import Cookies from 'js-cookie'
 import toast from 'react-hot-toast'
-import { ApiResponse, PaginatedResponse, PageContent } from '@/types'
+import { ApiResponse, PaginatedResponse, PageContent, Doc } from '@/types'
 
 class ApiClient {
   private client: AxiosInstance
@@ -259,4 +259,15 @@ export const tagsApi = {
     const response = await api.post(`/tags/page/${pageId}`, { tagIds })
     return response
   }
+}
+
+export const docsApi = {
+  getTree: () => api.get('/docs/tree'),
+  list: (params?: { page?: number; limit?: number; search?: string; status?: 'draft' | 'published'; parent_id?: number | null }) =>
+    api.get('/docs/list', { params }) as Promise<PaginatedResponse<Doc>>,
+  getBySlug: (slugPath: string) => api.get(`/docs/${slugPath}`),
+  getById: (id: string | number) => api.get(`/docs/id/${id}`),
+  create: (data: any) => api.post('/docs', data),
+  update: (id: string | number, data: any) => api.put(`/docs/${id}`, data),
+  delete: (id: string | number) => api.delete(`/docs/${id}`)
 }

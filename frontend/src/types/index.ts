@@ -321,3 +321,30 @@ export interface Activity {
   created_at: string
 }
 
+export interface DocNode {
+  id: number
+  title: string
+  slug: string
+  parent_id?: number | null
+  sort_order?: number
+  status: 'draft' | 'published'
+  type?: 'doc' | 'folder'
+  children?: DocNode[]
+}
+
+export interface Doc {
+  id: number
+  title: string
+  slug: string
+  parent_id?: number | null
+  sort_order: number
+  status: 'draft' | 'published'
+  type?: 'doc' | 'folder'
+  content: string
+  summary?: string | null
+  cover?: string | null
+  published_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
